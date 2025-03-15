@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorm Management System - Admin Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="admin-container">
+        <header class="admin-header">
+            <div class="logo">Dorm Management System</div>
+            <div class="admin-user">
+                <span>Admin User</span>
+                <a href="index.html">Logout</a>
+            </div>
+        </header>
+        
+        <div class="admin-layout">
+            <nav class="admin-sidebar">
+                <ul class="admin-menu">
+                    <li class="active"><a href="#dashboard">Dashboard</a></li>
+                    <li><a href="#rooms">Manage Rooms</a></li>
+                    <li><a href="#bookings">Bookings</a></li>
+                    <li><a href="#students">Students</a></li>
+                    <li><a href="#reports">Reports</a></li>
+                    <li><a href="#settings">Settings</a></li>
+                </ul>
+            </nav>
+            
+            <main class="admin-content">
+                <section id="dashboard" class="admin-section">
+                    <h2>Admin Dashboard</h2>
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card">
+                            <div class="card-value">156</div>
+                            <div class="card-label">Total Students</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-value">87%</div>
+                            <div class="card-label">Occupancy Rate</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-value">32</div>
+                            <div class="card-label">Pending Requests</div>
+                        </div>
+                        <div class="dashboard-card">
+                            <div class="card-value">5</div>
+                            <div class="card-label">Maintenance Issues</div>
+                        </div>
+                    </div>
+                    
+                    <div class="recent-bookings">
+                        <h3>Recent Bookings</h3>
+                        <table class="admin-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Student Name</th>
+                                    <th>Room</th>
+                                    <th>Building</th>
+                                    <th>Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>ST12345</td>
+                                    <td>John Smith</td>
+                                    <td>201</td>
+                                    <td>North Hall</td>
+                                    <td>2023-08-15</td>
+                                    <td><span class="status-pending">Pending</span></td>
+                                    <td>
+                                        <button class="btn-action">Approve</button>
+                                        <button class="btn-action">Deny</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ST12346</td>
+                                    <td>Jane Doe</td>
+                                    <td>105</td>
+                                    <td>East Hall</td>
+                                    <td>2023-08-14</td>
+                                    <td><span class="status-approved">Approved</span></td>
+                                    <td>
+                                        <button class="btn-action">View</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>ST12347</td>
+                                    <td>Mike Johnson</td>
+                                    <td>302</td>
+                                    <td>West Hall</td>
+                                    <td>2023-08-13</td>
+                                    <td><span class="status-denied">Denied</span></td>
+                                    <td>
+                                        <button class="btn-action">View</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+</body>
+</html>

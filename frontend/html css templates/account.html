@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dorm Management System - My Account</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <nav>
+                <div class="logo">Dorm Management System</div>
+                <ul class="nav-links">
+                    <li><a href="booking.html">Book a Room</a></li>
+                    <li><a href="account.html" class="active">My Account</a></li>
+                    <li><a href="index.html">Logout</a></li>
+                </ul>
+            </nav>
+        </header>
+        
+        <main class="account-section">
+            <h1>My Account</h1>
+            
+            <div class="account-container">
+                <div class="account-sidebar">
+                    <div class="user-profile">
+                        <div class="profile-image"></div>
+                        <h3>John Smith</h3>
+                        <p>Student ID: ST12345</p>
+                    </div>
+                    
+                    <ul class="account-menu">
+                        <li class="active"><a href="#personal-info">Personal Information</a></li>
+                        <li><a href="#my-booking">My Booking</a></li>
+                        <li><a href="#payment-history">Payment History</a></li>
+                        <li><a href="#maintenance-requests">Maintenance Requests</a></li>
+                        <li><a href="#change-password">Change Password</a></li>
+                    </ul>
+                </div>
+                
+                <div class="account-content">
+                    <section id="personal-info" class="account-panel active">
+                        <h2>Personal Information</h2>
+                        <form class="account-form">
+                            <div class="form-group">
+                                <label for="account-name">Full Name</label>
+                                <input type="text" id="account-name" name="name" value="John Smith" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-email">Email Address</label>
+                                <input type="email" id="account-email" name="email" value="john.smith@example.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-phone">Phone Number</label>
+                                <input type="tel" id="account-phone" name="phone" value="(555) 123-4567">
+                            </div>
+                            <div class="form-group">
+                                <label for="account-address">Home Address</label>
+                                <textarea id="account-address" name="address" rows="3">123 Main St, Anytown, ST 12345</textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="account-emergency">Emergency Contact</label>
+                                <input type="text" id="account-emergency" name="emergency" value="Mary Smith (Mother) - (555) 987-6543">
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save Changes</button>
+                        </form>
+                    </section>
+                    
+                    <section id="my-booking" class="account-panel">
+                        <h2>My Current Booking</h2>
+                        <div class="current-booking">
+                            <div class="booking-details">
+                                <div class="room-image"></div>
+                                <div class="booking-info">
+                                    <h3>Single Room 201 - North Hall</h3>
+                                    <p><strong>Term:</strong> Fall 2023</p>
+                                    <p><strong>Check-in Date:</strong> August 25, 2023</p>
+                                    <p><strong>Check-out Date:</strong> December 15, 2023</p>
+                                    <p><strong>Status:</strong> <span class="status-approved">Confirmed</span></p>
+                                    <p><strong>Payment Status:</strong> Paid in Full</p>
+                                    <div class="booking-actions">
+                                        <button class="btn btn-secondary">View Details</button>
+                                        <button class="btn btn-secondary">Request Changes</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
