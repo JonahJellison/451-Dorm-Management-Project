@@ -24,7 +24,7 @@ def register_user(request):
     
     salted_password = salt + password.encode('utf-8')
 
-    hashed_password = hashlib.sha256(salted_password).hex.digest()
+    hashed_password = hashlib.sha256(salted_password).hex.digest()  
 
     try:
         user = UserAuth.objects.create(
@@ -36,3 +36,4 @@ def register_user(request):
         return HttpResponseBadRequest(f"Could not create user: {e}")
 
     return JsonResponse({'status': 'success', 'message': 'User registered successfully.'})
+   
