@@ -15,11 +15,11 @@ export class LoginComponent {
 
   login() {
     if (this.username === null || this.password === null) {
-      console.error('Username and password must be provided');
+      console.error('Student ID must be provided');
       return;
     }
     if (this.username.length < 5 || this.password.length < 5) {
-      console.error('Username and password must be 5 or more characters each');
+      console.error('Student ID or Password must be 5 or more characters each');
       return;
     }
     console.log('Logging in with', this.username, this.password);

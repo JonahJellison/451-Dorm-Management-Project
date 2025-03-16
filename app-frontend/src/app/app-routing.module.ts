@@ -7,7 +7,6 @@ const routes: Routes = [
     { path: '', redirectTo: '/login', pathMatch: 'full' },
     { path: 'login', component: LoginComponent },
     {path: 'create-account', component: CreateAccountComponent}, // Explicitly define the create account route
-    // ...existing routes...
 ];
 
 @NgModule({
