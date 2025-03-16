@@ -37,3 +37,35 @@ def register_user(request):
 
     return JsonResponse({'status': 'success', 'message': 'User registered successfully.'})
    
+@csrf_exempt  # For testing purposes. In production, ensure proper CSRF handling.
+@require_POST
+def login_user(request):
+    try:
+        data = json.loads(request.body)
+        user_id = data.get('id')
+        password = data.get('password')
+        if not user_id or not password:
+            return HttpResponseBadRequest("Missing 'id' or 'password'.")
+    except json.JSONDecodeError:
+        return HttpResponseBadRequest("Invalid JSON.")
+
+    # Retrieve the user from the database
+    try:
+        user = UserAuth.objects.get(user_id=user_id)
+    except UserAuth.DoesNotExist:
+        return HttpResponseBadRequest("User does not exist.")
+
+    # Convert the stored hex salt back to bytes
+    salt_bytes = bytes.fromhex(user.salt)
+    
+    # Combine the salt with the provided password (encode the password)
+    salted_password = salt_bytes + password.encode('utf-8')
+    
+    # Hash the combined bytes using SHA256
+    hashed_password = hashlib.sha256(salted_password).hexdigest()
+    
+    # Compare the computed hash with the stored hash
+    if hashed_password == user.hashed_password:
+        return JsonResponse({'status': 'success', 'message': 'Login successful.'})
+    else:
+        return HttpResponseBadRequest("Invalid password.")
