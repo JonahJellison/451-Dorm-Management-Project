@@ -7,30 +7,38 @@ from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserAuth
 
-@csrf_exempt
+@csrf_exempt  # For testing purposes. In production, ensure proper CSRF handling.
 @require_POST
 def register_user(request):
     try:
-        data = json.load(request.body)
-        user_id = data.get('id')
+        data = json.loads(request.body.decode('utf-8'))
+        username=data.get('fullname')
+        user_id = data.get('studentid')
         password = data.get('password')
+        email = data.get('email')
         if not user_id or not password:
             return HttpResponseBadRequest('ID or Password missing!')
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Something went wrong with the JSON.")
     
-    salt = "Salt100"   
-    salt_proccessed = salt.encode('utf-8').ljust(16,b'\0')
+    # Create a static salt "Salt100" and pad it to 16 bytes.
+    salt = "Salt100"
+    salt_processed = salt.encode('utf-8').ljust(16, b'\0')
     
-    salted_password = salt + password.encode('utf-8')
+    # Combine the padded salt with the password.
+    salted_password = salt_processed + password.encode('utf-8')
+    
+    # Correct hash call.
+    hashed_password = hashlib.sha256(salted_password).hexdigest()
 
-    hashed_password = hashlib.sha256(salted_password).hex.digest()  
-
+    print(hashed_password)
     try:
         user = UserAuth.objects.create(
             user_id=user_id,
-            salt=salt.hex(),           # Storing the hex representation of the salt
-            hashed_password=hashed_password
+            name=username,
+            salt=salt_processed.hex(),  # Use the processed salt's hex representation
+            hashed_password=hashed_password,
+            email=email
         )
     except Exception as e:
         return HttpResponseBadRequest(f"Could not create user: {e}")

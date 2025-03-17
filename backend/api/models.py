@@ -2,8 +2,10 @@ from django.db import models
 
 class UserAuth(models.Model):
     user_id = models.CharField(max_length=255, unique=True)
-    salt = models.CharField(max_length=32)  # storing hex representation (16 bytes => 32 hex characters)
-    hashed_password = models.CharField(max_length=64)  # SHA256 hash in hex (64 characters)
+    name = models.CharField(max_length=255, default='DefaultUsername')
+    salt = models.CharField(max_length=32) 
+    hashed_password = models.CharField(max_length=64) 
+    email = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
