@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -13,7 +14,8 @@ export class LoginComponent {
   username: string | null = null;
   password: string | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient,private router: Router) {}
+  
 
   login(): void {
     // Validate that the fields are provided
@@ -36,8 +38,7 @@ export class LoginComponent {
     this.http.post('http://localhost:8000/api/login/', payload).subscribe(
       (response: any) => {
         console.log('Login successful:', response);
-        // TODO: Handle successful login (e.g., store token, redirect user, etc.)
-        // Nelson: REDIRECT TO HOME PAGE HERE
+        this.router.navigate(['/dorm-bookings']);
       },
       (error) => {
         console.error('Login error:', error);
