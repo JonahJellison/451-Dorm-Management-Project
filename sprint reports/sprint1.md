@@ -2,62 +2,69 @@
 # Sprint 1 Report
 Video Link:
 ## What's New (User Facing)
-* Feature 1 or Bug Fix 1
-* Feature 2 or Bug Fix 2
-* Feature n or Bug Fix n
+### Frontend
+* created new angular project with components for each page
+* login page
+* create account page
+* Admin dashboard
+* Booking page
+* account settings page
+### Backend
+* Created Django backend project
+* Created data models to represent the user data
+* Wrote login api to authenticate username and passwords
+* Wrote create account api
+### Database
+* Created database using azure and linked it to our project
 ## Work Summary (Developer Facing)
-Provide a one paragraph synposis of what your team accomplished this sprint. Don't
-repeat the "What's New" list of features. Instead, help the instructor understand
-how you went about the work described there, any barriers you overcame, and any
-significant learnings for your team.
+This sprint was primarially focused on getting our project set up as well as outlining a skeleton 
+for the project. We get the frontend completed with html and css. Right now it is full of "dummy" data,
+so it needs to be connected with the backend, but it serves as a good starting point for our sprint 2. Additionally,
+we set up the backend with django and completed the user authentication and login system. Finally, we worked on the 
+database and got it initially ready to interface with the rest of the project. For the database we used the Azure
+portal to create the server and database and then linked that to our project. Then in the models.py file we added our 
+table definitions for all entities. 
 ## Unfinished Work
-If applicable, explain the work you did not finish in this sprint. For issues/user
-stories in the current sprint that have not been closed, (a) any progress toward
-completion of the issues has been clearly tracked (by checking the checkboxes of
-acceptance criteria), (b) a comment has been added to the issue to explain why the
-issue could not be completed (e.g., "we ran out of time" or "we did not anticipate
-it would be so much work"), and (c) the issue is added to a subsequent sprint, so
-that it can be addressed later.
+N/A
 ## Completed Issues/User Stories
-Here are links to the issues that we completed in this sprint:
-* URL of issue 1
-* URL of issue 2
-* URL of issue n
-Desirables (Remove this section when you save the file):
-* Each issue should be assigned to a milestone
-* Each completed issue should be assigned to a pull request
-* Each completed pull request should include a link to a "Before and After" video
-* All team members who contributed to the issue should be assigned to it on
-GitHub
-* Each issue should be assigned story points using a label
-* Story points contribution of each team member should be indicated in a comment
+Github project board: https://github.com/users/JonahJellison/projects/3
 ## Incomplete Issues/User Stories
-Here are links to issues we worked on but did not complete in this sprint:
-* URL of issue 1 <<One sentence explanation of why issue was not completed>>
-* URL of issue 2 <<One sentence explanation of why issue was not completed>>
-* URL of issue n <<One sentence explanation of why issue was not completed>>
-Examples of explanations (Remove this section when you save the file):
-* "We ran into a complication we did not anticipate (explain briefly)."
-* "We decided that the feature did not add sufficient value for us to work on it
-in this sprint (explain briefly)."
-* "We could not reproduce the bug" (explain briefly).
-* "We did not get to this issue because..." (explain briefly)
+We kept this sprint pretty simple to create the backbone of our project, which will allow
+us to move quickly next sprint.
 ## Code Files for Review
-Please review the following code files, which were actively developed during this
-sprint, for quality:
-* [Name of code file 1](https://github.com/your_repo/file_extension)
-* [Name of code file 2](https://github.com/your_repo/file_extension)
-* [Name of code file 3](https://github.com/your_repo/file_extension)
+https://github.com/JonahJellison/451-Dorm-Management-Project/tree/main/app-frontend/src/app/account-info
+https://github.com/JonahJellison/451-Dorm-Management-Project/tree/main/app-frontend/src/app/admin-dashboard
+https://github.com/JonahJellison/451-Dorm-Management-Project/tree/main/app-frontend/src/app/create-account
+https://github.com/JonahJellison/451-Dorm-Management-Project/tree/main/app-frontend/src/app/dorm-bookings
+https://github.com/JonahJellison/451-Dorm-Management-Project/tree/main/app-frontend/src/app/login
+https://github.com/JonahJellison/451-Dorm-Management-Project/tree/main/backend/backend
 ## Retrospective Summary
 Here's what went well:
-* Item 1
-* Item 2
-* Item x
+
+*   **Team collaboration:** Our team worked effectively together, communicating well and supporting each other throughout the sprint. This allowed us to overcome challenges and stay on track.
+
+*   **Frontend design:** We successfully created a visually appealing and user-friendly frontend design. The components for each page were well-structured and easy to navigate.
+
+*   **Creating all necessary parts of the project (frontend, backend, and database initialization):** We successfully set up the basic structure for the frontend, backend, and database, providing a solid foundation for future development.
+
+*   **User sign-in:** We implemented a functional user sign-in system, allowing users to create accounts and log in securely.
+
 Here's what we'd like to improve:
-* Item 1
-* Item 2
-* Item x
+
+*   **Moving/iterating faster:** We want to improve our velocity and complete more tasks within each sprint. This could involve better planning, task breakdown, and time management.
+
+*   **Procrastination:** We need to address procrastination within the team to ensure that tasks are completed in a timely manner. This could involve setting deadlines, breaking down tasks into smaller steps, and using time management techniques.
+
+*   **Getting more progress done next sprint:** We aim to make more significant progress in the next sprint by focusing on key features and prioritizing tasks effectively.
+
 Here are changes we plan to implement in the next sprint:
-* Item 1
-* Item 2
-* Item x
+
+*   **Populate database with data about rooms:** We will populate the database with detailed information about the available rooms, including their features, capacity, and pricing.
+
+*   **Link all frontend pages to the backend:** We will connect all frontend pages to the backend, enabling data to be dynamically displayed and updated.
+
+*   **Create sample student data to fill the database with:** We will create sample student data to populate the database, allowing us to test the functionality of the application with realistic data.
+
+*   **Admin pages:** We will develop the admin pages, providing administrators with the ability to manage users, rooms, and bookings.
+
+*   **Connecting database to backend:** We will fully integrate the database with the backend, allowing the application to store and retrieve data efficiently.

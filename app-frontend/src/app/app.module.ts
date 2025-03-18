@@ -8,17 +8,15 @@ import { CreateAccountComponent } from './create-account/create-account.componen
 
 @NgModule({
   declarations: [
-    AppComponent,
-    LoginComponent,
-    CreateAccountComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
     FormsModule,
-    ReactiveFormsModule  // <-- This line is essential
+    ReactiveFormsModule,  // <-- This line is essential
+    AppComponent
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  bootstrap: []
 })
 export class AppModule { }
