@@ -1,34 +1,33 @@
-
 <div class="container">
-<div class="form-container">
-    <h1>Dorm Management System</h1>
-    <h2>Create Account</h2>
-    <form action="#" method="post" id="register-form">
+    <div class="form-container">
+      <h1>Dorm Management System</h1>
+      <h2>Create Account</h2>
+      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" id="register-form">
         <div class="form-group">
-            <label for="fullname">Full Name</label>
-            <input type="text" id="fullname" name="fullname" required>
+          <label for="fullname">Full Name</label>
+          <input type="text" id="fullname" formControlName="fullname" required>
         </div>
         <div class="form-group">
-            <label for="email">Email Address</label>
-            <input type="email" id="email" name="email" required>
+          <label for="email">Email Address</label>
+          <input type="email" id="email" formControlName="email" required>
         </div>
         <div class="form-group">
-            <label for="studentid">Student ID</label>
-            <input type="text" id="studentid" name="studentid" required>
+          <label for="studentid">Student ID</label>
+          <input type="text" id="studentid" formControlName="studentid" required>
         </div>
         <div class="form-group">
-            <label for="new-password">Password</label>
-            <input type="password" id="new-password" name="new-password" required>
+          <label for="new-password">Password</label>
+          <input type="password" id="new-password" formControlName="newPassword" required>
         </div>
         <div class="form-group">
-            <label for="confirm-password">Confirm Password</label>
-            <input type="password" id="confirm-password" name="confirm-password" required>
+          <label for="confirm-password">Confirm Password</label>
+          <input type="password" id="confirm-password" formControlName="confirmPassword" required>
         </div>
         <button type="submit" class="btn btn-primary">Create Account</button>
-    </form>
-    <div class="form-footer">
+      </form>
+      <div class="form-footer">
         <p>Already have an account? <a href="index.html">Login</a></p>
+      </div>
     </div>
-</div>
-</div>
-
+  </div>
+  

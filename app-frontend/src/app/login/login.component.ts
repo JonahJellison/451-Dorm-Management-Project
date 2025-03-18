@@ -1,27 +1,49 @@
 import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, HttpClientModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-
   username: string | null = null;
   password: string | null = null;
 
-  login() {
-    if (this.username === null || this.password === null) {
-      console.error('Username and password must be provided');
+  constructor(private http: HttpClient,private router: Router) {}
+  
+
+  login(): void {
+    // Validate that the fields are provided
+    if (!this.username || !this.password) {
+      console.error('Student ID and Password must be provided');
       return;
     }
     if (this.username.length < 5 || this.password.length < 5) {
-      console.error('Username and password must be 5 or more characters each');
+      console.error('Student ID or Password must be 5 or more characters each');
       return;
     }
-    console.log('Logging in with', this.username, this.password);
+    
+    // Build the payload matching the Django view's expectations.
+    const payload = {
+      id: this.username,
+      password: this.password
+    };
+
+    // Call the Django backend login endpoint.
+    this.http.post('http://localhost:8000/api/login/', payload).subscribe(
+      (response: any) => {
+        console.log('Login successful:', response);
+        this.router.navigate(['/dorm-bookings']);
+      },
+      (error) => {
+        console.error('Login error:', error);
+        // TODO: Display error message to the user when they type in wrong password
+      }
+    );
   }
 }
