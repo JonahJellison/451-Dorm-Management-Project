@@ -1,6 +1,7 @@
 
 # Sprint 1 Report
 Video Link: https://youtu.be/o8HnFasjYvQ
+Repo Link: https://github.com/JonahJellison/451-Dorm-Management-Project/
 ## What's New (User Facing)
 ### Frontend
 * created new angular project with components for each page
