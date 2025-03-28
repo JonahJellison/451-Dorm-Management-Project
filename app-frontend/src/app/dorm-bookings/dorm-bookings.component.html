@@ -1,4 +1,3 @@
-
 <div class="container">
     <header>
         <nav>
@@ -16,32 +15,32 @@
         
         <div class="filter-section">
             <h3>Filter Options</h3>
-            <form id="filter-form">
+            <form id="filter-form" (ngSubmit)="applyFilters()">
                 <div class="form-row">
                     <div class="form-group">
                         <label for="dorm-building">Building</label>
-                        <select id="dorm-building" name="building">
+                        <select id="dorm-building" name="building" [(ngModel)]="selectedBuilding">
                             <option value="">All Buildings</option>
-                            <option value="north">North Hall</option>
-                            <option value="south">South Hall</option>
-                            <option value="east">East Hall</option>
-                            <option value="west">West Hall</option>
+                            <option value="north">Duncan Dunn</option>
+                            <option value="south">Honors Hall</option>
+                            <option value="east">Global Scholars</option>
+                            <option value="west">Northside</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="room-type">Room Type</label>
-                        <select id="room-type" name="room-type">
+                        <select id="room-type" name="roomType" [(ngModel)]="selectedRoomType">
                             <option value="">All Types</option>
                             <option value="single">Single</option>
                             <option value="double">Double</option>
-                            <option value="suite">Suite</option>
+                            <option value="suite">Triple</option>
                         </select>
                     </div>
                     
                     <div class="form-group">
                         <label for="price-range">Price Range</label>
-                        <select id="price-range" name="price-range">
+                        <select id="price-range" name="priceRange" [(ngModel)]="selectedPriceRange">
                             <option value="">All Prices</option>
                             <option value="low">$ - Economy</option>
                             <option value="medium">$$ - Standard</option>
