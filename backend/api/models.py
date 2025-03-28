@@ -12,18 +12,9 @@ class UserAuth(models.Model):
         return self.user_id
     
 
-class Student(models.Model):
-    student_id = models.IntegerField(max_length=6, unique=True, primary_key=True)
-    name = models.CharField(max_length=255, default='DefaultUsername')
-    email = models.CharField(max_length=255, unique=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.user_id
-
 class studentBooking(models.Model):
     booking_id = models.AutoField(primary_key=True)
-    student_id = models.ForeignKey(Student, on_delete=models.CASCADE)
+    student_id = models.ForeignKey(UserAuth, on_delete=models.CASCADE)
     booking_date = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     lease_length = models.IntegerField()
@@ -47,6 +38,9 @@ class Room(models.Model):
     capacity = models.IntegerField(default=1)
     is_available = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    has_AC = models.BooleanField(default=False)
+    has_private_bath = models.BooleanField(default=False)
+    cost_per_month = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
 
     def __str__(self):
         return f"{self.dorm.name} - Room {self.room_number}"
