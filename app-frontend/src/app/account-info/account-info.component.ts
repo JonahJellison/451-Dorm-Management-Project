@@ -8,5 +8,7 @@ import { Component } from '@angular/core';
   styleUrl: './account-info.component.css'
 })
 export class AccountInfoComponent {
-
+  infoView: boolean = true;
+  bookingView: boolean = false;
+  id: string = "John Doe";
 }
