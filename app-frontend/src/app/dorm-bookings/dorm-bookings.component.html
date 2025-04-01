@@ -53,43 +53,22 @@
             </form>
         </div>
         
-        <div class="rooms-container">
-            <!-- Room cards will be displayed here -->
-            <div class="room-card">
-                <div class="room-image"></div>
-                <div class="room-details">
-                    <h3>Single Room - North Hall</h3>
-                    <p class="room-description">Comfortable single room with a bed, desk, and private bathroom.</p>
-                    <p class="room-facilities">WiFi • Air Conditioning • Desk • Closet</p>
-                    <div class="room-meta">
-                        <span class="room-price">$2,500/semester</span>
-                        <button class="btn btn-primary">Book Now</button>
-                    </div>
-                </div>
+        <!-- Room cards display section -->
+        <div class="room-cards-container">
+            <div *ngIf="selected_dorms.length === 0" class="no-rooms-message">
+                No rooms available based on your filters.
             </div>
             
-            <div class="room-card">
-                <div class="room-image"></div>
-                <div class="room-details">
-                    <h3>Double Room - East Hall</h3>
-                    <p class="room-description">Spacious double room with two beds, shared study area, and bathroom.</p>
-                    <p class="room-facilities">WiFi • Air Conditioning • Two Desks • Shared Bathroom</p>
-                    <div class="room-meta">
-                        <span class="room-price">$2,100/semester</span>
-                        <button class="btn btn-primary">Book Now</button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="room-card">
-                <div class="room-image"></div>
-                <div class="room-details">
-                    <h3>Suite - West Hall</h3>
-                    <p class="room-description">Premium suite with two bedrooms, common area, and private bathroom.</p>
-                    <p class="room-facilities">WiFi • Air Conditioning • Mini Fridge • TV • Private Bathroom</p>
-                    <div class="room-meta">
-                        <span class="room-price">$3,200/semester</span>
-                        <button class="btn btn-primary">Book Now</button>
+            <div *ngIf="selected_dorms.length > 0" class="room-cards-grid">
+                <div *ngFor="let room of selected_dorms" class="room-card">
+                    <img [src]="getDormImage(room.dorm)" alt="{{room.dorm}} image" class="room-image">
+                    <div class="room-details">
+                        <h3>{{room.dorm}} - Room {{room.room_number}}</h3>
+                        <p><strong>ID:</strong> {{room.id}}</p>
+                        <p><strong>Capacity:</strong> {{room.capacity}} persons</p>
+                        <p><strong>Private Bathroom:</strong> {{room.has_bathroom ? 'Yes' : 'No'}}</p>
+                        <p><strong>Air Conditioning:</strong> {{room.has_ac ? 'Yes' : 'No'}}</p>
+                        <p><strong>Cost:</strong> ${{room.cost}}/semester</p>
                     </div>
                 </div>
             </div>

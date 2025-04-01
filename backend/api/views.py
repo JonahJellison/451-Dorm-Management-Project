@@ -1,13 +1,13 @@
 import json
 import hashlib
 import os
-
+from .models import *
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserAuth
 import requests
-
+import json
 @csrf_exempt  # For testing purposes. In production, ensure proper CSRF handling.
 @require_POST
 def register_user(request):
@@ -81,9 +81,55 @@ def login_user(request):
     
 
 @csrf_exempt
-def fetch_admin_data():
+def fetch_admin_data(request):
+    if request.method == 'POST':
+        body = json.loads(request.body.decode('utf-8'))
     pass
 
 @csrf_exempt
-def fetch_student_data():
+def fetch_student_data(request):
     pass
+
+@csrf_exempt
+def fetch_dormroom_data(request):
+    if request.method == 'GET':
+        # Get parameters from the URL query string instead of the body
+        dorm_name = request.GET.get('building', 'all')
+        capacity = request.GET.get('roomType', 'all')
+        price_range = request.GET.get('priceRange', 'all')
+        
+        print("Request parameters:", {
+            'building': dorm_name,
+            'roomType': capacity,
+            'priceRange': price_range
+        })
+
+        # Start with all dorm rooms
+        rooms = Room.objects.filter(is_available=True)
+        
+        # Filter by dorm name if not 'all'
+        if dorm_name != 'All':
+            rooms = rooms.filter(dorm__name=dorm_name)
+        
+        # Filter by capacity if not 'all'
+        if capacity != 'All':
+            rooms = rooms.filter(capacity=capacity)
+        
+        # Filter by price range if not 'all'
+        if price_range != 'All':
+            if price_range == 'low':
+                rooms = rooms.filter(cost_per_month__gte=100, cost_per_month__lt=200)
+            elif price_range == 'medium':
+                rooms = rooms.filter(cost_per_month__gte=200, cost_per_month__lt=300)
+            elif price_range == 'high':
+                rooms = rooms.filter(cost_per_month__gte=300)
+        
+        # Serialize the filtered rooms
+        rooms_data = list(rooms.values())
+        print(rooms_data[0])
+        return JsonResponse({'rooms': rooms_data})
+    
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+
+
