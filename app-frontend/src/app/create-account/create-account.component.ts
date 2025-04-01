@@ -55,7 +55,7 @@ export class CreateAccountComponent implements OnInit {
       password: this.registerForm.value.newPassword
     };
     
-    const url = 'http://localhost:8000/api/register/';
+    const url = 'http://localhost:8000/api/register';
     this.http.post(url, payload).subscribe(
       (response) => {
         console.log('Registration successful:', response);

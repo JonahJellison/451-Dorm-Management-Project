@@ -1,9 +1,11 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrl: './admin-dashboard.component.css'
 })
@@ -20,11 +22,80 @@ export class AdminDashboardComponent implements OnInit {
   manageRoomView: boolean = false;
   studentsView: boolean = false;
 
-  ngOnInit(): void {
-    // Initialize component data here
+  recentBookings: BookingData[] = [];
+  private apiUrl = 'http://localhost:8000/api';
 
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.fetchAdminData();
   }
 
+  fetchAdminData(): void {
+    this.http.get<AdminDataResponse>(`${this.apiUrl}/fetch_admin_data`).subscribe({
+      next: (response) => {
+        console.log('Admin data received:', response);
+        
+        // Map booking data to display format
+        this.recentBookings = response.bookings.map(booking => ({
+          id: booking.id,
+          student_id: booking.student_id,
+          student_name: booking.student_id, // Replace with actual student name when available
+          room_number: booking.room_number,
+          building: booking.dorm_name,
+          date: booking.booking_date || new Date().toISOString(),
+          status: booking.confirmed === null ? 'Pending' : 
+                 booking.confirmed ? 'Approved' : 'Denied',
+          confirmed: booking.confirmed
+        }));
+
+        // Count pending requests
+        this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+        
+        // Set other dashboard stats (would come from backend in a full implementation)
+        this.totalStudents = this.recentBookings.length;
+      },
+      error: (error) => {
+        console.error('Error fetching admin data:', error);
+      }
+    });
+  }
+
+  confirmBooking(bookingId: number): void {
+    this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, confirmed: true })
+      .subscribe({
+        next: () => {
+          // Update local booking status
+          const booking = this.recentBookings.find(b => b.id === bookingId);
+          if (booking) {
+            booking.status = 'Approved';
+            booking.confirmed = true;
+          }
+          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+        },
+        error: (error) => {
+          console.error('Error confirming booking:', error);
+        }
+      });
+  }
+
+  denyBooking(bookingId: number): void {
+    this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, confirmed: false })
+      .subscribe({
+        next: () => {
+          // Update local booking status
+          const booking = this.recentBookings.find(b => b.id === bookingId);
+          if (booking) {
+            booking.status = 'Denied';
+            booking.confirmed = false;
+          }
+          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+        },
+        error: (error) => {
+          console.error('Error denying booking:', error);
+        }
+      });
+  }
 
   setDashboardView() {
     this.dashboadView = true;
@@ -43,6 +114,29 @@ export class AdminDashboardComponent implements OnInit {
     this.manageRoomView = false;
     this.studentsView = true;
   }
+}
+
+interface BookingData {
+  id: number;
+  student_id: string;
+  student_name: string;
+  room_number: string;
+  building: string;
+  date: string;
+  status: string;
+  confirmed: boolean | null;
+}
+
+interface AdminDataResponse {
+  bookings: {
+    id: number;
+    student_id: string;
+    booking_date: string | null;
+    lease_length: number;
+    dorm_name: string;
+    room_number: string;
+    confirmed: boolean | null;
+  }[];
 }
 
 interface RecentBooking{

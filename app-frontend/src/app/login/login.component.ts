@@ -35,7 +35,7 @@ export class LoginComponent {
     };
 
     // Call the Django backend login endpoint.
-    this.http.post('http://localhost:8000/api/login/', payload).subscribe(
+    this.http.post('http://localhost:8000/api/login', payload).subscribe(
       (response: any) => {
         console.log('Login successful:', response);
         this.router.navigate(['/dorm-bookings']);

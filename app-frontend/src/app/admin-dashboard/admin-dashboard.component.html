@@ -20,19 +20,19 @@
                 <h2>Admin Dashboard</h2>
                 <div class="dashboard-cards">
                     <div class="dashboard-card">
-                        <div class="card-value">156</div>
+                        <div class="card-value">{{totalStudents}}</div>
                         <div class="card-label">Total Students</div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-value">87%</div>
+                        <div class="card-value">{{occupancyRate}}%</div>
                         <div class="card-label">Occupancy Rate</div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-value">32</div>
+                        <div class="card-value">{{pendingRequests}}</div>
                         <div class="card-label">Pending Requests</div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-value">5</div>
+                        <div class="card-value">{{matinanceRequests}}</div>
                         <div class="card-label">Maintenance Issues</div>
                     </div>
                 </div>
@@ -52,39 +52,25 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr>
-                                <td>ST12345</td>
-                                <td>John Smith</td>
-                                <td>201</td>
-                                <td>North Hall</td>
-                                <td>2023-08-15</td>
-                                <td><span class="status-pending">Pending</span></td>
+                            <tr *ngFor="let booking of recentBookings">
+                                <td>{{booking.student_id}}</td>
+                                <td>{{booking.student_name}}</td>
+                                <td>{{booking.room_number}}</td>
+                                <td>{{booking.building}}</td>
+                                <td>{{booking.date | date:'yyyy-MM-dd'}}</td>
                                 <td>
-                                    <button class="btn-action">Approve</button>
-                                    <button class="btn-action">Deny</button>
+                                    <span [class]="'status-' + booking.status.toLowerCase()">
+                                        {{booking.status}}
+                                    </span>
+                                </td>
+                                <td>
+                                    <button *ngIf="booking.status === 'Pending'" class="btn-action" (click)="confirmBooking(booking.id)">Approve</button>
+                                    <button *ngIf="booking.status === 'Pending'" class="btn-action" (click)="denyBooking(booking.id)">Deny</button>
+                                    <button *ngIf="booking.status !== 'Pending'" class="btn-action">View</button>
                                 </td>
                             </tr>
-                            <tr>
-                                <td>ST12346</td>
-                                <td>Jane Doe</td>
-                                <td>105</td>
-                                <td>East Hall</td>
-                                <td>2023-08-14</td>
-                                <td><span class="status-approved">Approved</span></td>
-                                <td>
-                                    <button class="btn-action">View</button>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td>ST12347</td>
-                                <td>Mike Johnson</td>
-                                <td>302</td>
-                                <td>West Hall</td>
-                                <td>2023-08-13</td>
-                                <td><span class="status-denied">Denied</span></td>
-                                <td>
-                                    <button class="btn-action">View</button>
-                                </td>
+                            <tr *ngIf="recentBookings.length === 0">
+                                <td colspan="7" class="text-center">No booking requests available</td>
                             </tr>
                         </tbody>
                     </table>
