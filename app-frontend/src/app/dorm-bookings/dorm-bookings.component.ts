@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-
+import { AuthService } from '../auth-service/auth.service';
 @Component({
   selector: 'app-dorm-bookings',
   templateUrl: './dorm-bookings.component.html',
@@ -11,8 +11,17 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
   standalone: true
 })
 
-export class DormBookingsComponent {
-constructor(private http: HttpClient) {}
+export class DormBookingsComponent implements OnInit {
+constructor(private http: HttpClient, private authservice: AuthService) {}
+
+ngOnInit(): void {
+  this.studentId = this.authservice.getUser(); // Get student ID from auth service
+  console.log('On dorm booking page with Student ID:', this.studentId);
+  // Initialize component by loading dorm data
+  this.applyFilters();
+}
+
+studentId: string | null = null;
 
 selectedBuilding: string = '';
 selectedRoomType: string = '';
@@ -87,6 +96,7 @@ submitBooking() {
   if (!this.selectedRoomForBooking) return;
   
   const bookingData = {
+    student_id: this.studentId,
     room_id: this.selectedRoomForBooking.room_id,
     request_roommate: this.requestRoommate,
     roommate_student_id: this.requestRoommate ? this.roommateStudentId : null,

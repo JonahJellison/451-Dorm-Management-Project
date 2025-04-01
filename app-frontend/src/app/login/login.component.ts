@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { AuthService } from '../auth-service/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -14,7 +15,7 @@ export class LoginComponent {
   username: string | null = null;
   password: string | null = null;
 
-  constructor(private http: HttpClient,private router: Router) {}
+  constructor(private http: HttpClient,private router: Router, private authservice: AuthService) {}
   
 
   login(): void {
@@ -38,6 +39,8 @@ export class LoginComponent {
     this.http.post('http://localhost:8000/api/login', payload).subscribe(
       (response: any) => {
         console.log('Login successful:', response);
+        this.authservice.setUser(this.username); // Student ID
+
         this.router.navigate(['/dorm-bookings']);
       },
       (error) => {
