@@ -35,7 +35,11 @@ class Room(models.Model):
     cost_per_month = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
 
 '''
-
+'''
+django admin login:
+nelso
+451finalproject
+'''
 import random
 import os
 import django
