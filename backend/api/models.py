@@ -14,12 +14,13 @@ class UserAuth(models.Model):
 
 class Student(models.Model):
     student_id = models.IntegerField(unique=True, primary_key=True)
+    user = models.OneToOneField(UserAuth, on_delete=models.CASCADE, related_name='student')
     name = models.CharField(max_length=255, default='DefaultUsername')
     email = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.user_id
+        return str(self.student_id)
 
 class studentBooking(models.Model):
     booking_id = models.AutoField(primary_key=True)
@@ -27,6 +28,8 @@ class studentBooking(models.Model):
     booking_date = models.DateTimeField(auto_now_add=True)
     created_at = models.DateTimeField(auto_now_add=True)
     lease_length = models.IntegerField()
+    dorm_name = models.CharField(max_length=255)
+    room_number = models.CharField(max_length=50)
 
     def __str__(self):
         return self.booking_id

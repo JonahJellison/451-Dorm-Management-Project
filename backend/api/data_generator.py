@@ -37,6 +37,17 @@ class Room(models.Model):
 '''
 
 import random
+import os
+import django
+import sys
+
+# Set up Django environment
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+django.setup()
+
+# Import models
+from api.models import Dorm, Room
 
 dorm_names = ["Duncan Dunn", "Honors Hall", "Global Scholars", "Northside"]
 pricing = {'ac': 50, 'private_bath': 100, 'single': 400, 'double': 300, 'triple': 200, 'quad': 100}
@@ -78,4 +89,49 @@ for name in dorm_names:
 
         dorm_room_data.append(roomdata)
 
+def populate_database():
+    print("Starting database population...")
+    
+    # First, create the dorms
+    dorm_objects = {}
+    for name in dorm_names:
+        address = f"{random.randint(100, 999)} University Ave, Campus"
+        dorm = Dorm.objects.create(
+            name=name,
+            address=address
+        )
+        dorm_objects[name] = dorm
+        print(f"Created dorm: {name}")
+    
+    # Then create all the rooms
+    room_count = 0
+    for room_data in dorm_room_data:
+        dorm = dorm_objects[room_data['Name']]
+        room = Room.objects.create(
+            dorm=dorm,
+            room_number=str(room_data['RoomNumber']),
+            capacity=room_data['Capacity'],
+            is_available=True,
+            has_AC=room_data['HasAC'],
+            has_private_bath=room_data['HasBath'],
+            cost_per_month=room_data['MonthlyCost']
+        )
+        room_count += 1
         
+        # Print progress every 100 rooms
+        if room_count % 100 == 0:
+            print(f"Created {room_count} rooms so far")
+    
+    print(f"Database population complete! Created {len(dorm_objects)} dorms and {room_count} rooms.")
+
+if __name__ == '__main__':
+    # Check if data already exists to prevent duplicate entries
+    existing_dorms = Dorm.objects.count()
+    if existing_dorms > 0:
+        overwrite = input(f"Found {existing_dorms} existing dorms. Do you want to proceed anyway? (y/n): ")
+        if overwrite.lower() != 'y':
+            print("Operation cancelled.")
+            sys.exit(0)
+    
+    populate_database()
+

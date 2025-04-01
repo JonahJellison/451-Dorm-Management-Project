@@ -6,6 +6,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from .models import UserAuth
+import requests
 
 @csrf_exempt  # For testing purposes. In production, ensure proper CSRF handling.
 @require_POST
@@ -77,3 +78,12 @@ def login_user(request):
         return JsonResponse({'status': 'success', 'message': 'Login successful.'})
     else:
         return HttpResponseBadRequest("Invalid password.")
+    
+
+@csrf_exempt
+def fetch_admin_data():
+    pass
+
+@csrf_exempt
+def fetch_student_data():
+    pass

@@ -1,5 +1,6 @@
 
 /451_venv
+/backend/backend/settings.py
 # Python / Django
 *.py[cod]
 __pycache__/
