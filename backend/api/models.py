@@ -35,7 +35,7 @@ class studentBooking(models.Model):
     room_number = models.CharField(max_length=50)
     confirmed = models.BooleanField(default=False)
     def __str__(self):
-        return self.booking_id
+        return str(self.booking_id)
     
 class Dorm(models.Model):
     dorm_id = models.AutoField(primary_key=True)

@@ -227,53 +227,40 @@ def book_room(request):
                 # Get the UserAuth object first
                 try:
                     user = UserAuth.objects.get(user_id=student_id)
-                    print("User found:", user.user_id)
+                    
                     newBooking = studentBooking(
-                        student_id=user,  # Pass the UserAuth instance, not just the ID
+                        student_id=user,
                         lease_length=lease_length,
                         dorm_name=dorm_name,
                         room_number=room_number,
-                        confirmed=False
+                        confirmed=False  
                     )
                     print("New booking created:", newBooking)
-                    # Update the room availability
+                    
+                    # Save the booking to the database
+                    newBooking.save()
+                    print("Booking saved:", newBooking)
+                    
+                    # Update the room availability only once
                     room.current_occupants += 1
                     if room.current_occupants >= room.capacity:
                         room.is_available = False
                     else:
                         room.is_available = True
                     room.save()
+                    print("Room updated:", room)
+                    
+                    return JsonResponse({
+                        'status': 'success', 
+                        'message': 'Room booked successfully.',
+                        'booking_id': newBooking.booking_id
+                    })
+                    
                 except UserAuth.DoesNotExist:
                     return JsonResponse({
                         'status': 'error',
                         'message': 'Student ID not found.'
                     }, status=404)
-                
-                print("Room number: {room_number}, Dorm name: {dorm_name}")
-                newBooking = studentBooking(
-                    student_id=student_id,
-                    lease_length=lease_length,
-                    dorm_name=dorm_name,
-                    room_number=room_number,
-                    confirmed=False
-                )
-                print("New booking created:", newBooking)
-                # Update the room availability
-                room.current_occupants += 1
-                if room.current_occupants >= room.capacity:
-                    room.is_available = False
-                else:
-                    room.is_available = True
-                room.save()
-                print("Room updated:", room)
-                # Save the booking
-                newBooking.save()
-                print("Booking saved:", newBooking)
-                return JsonResponse({
-                'status': 'success', 
-                'message': 'Room booked successfully.',
-                'booking_id': newBooking.booking_id
-                })
                 
             except Room.DoesNotExist:
                 print("Room not found.")
