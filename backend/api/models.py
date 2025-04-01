@@ -12,6 +12,15 @@ class UserAuth(models.Model):
         return self.user_id
     
 
+class Student(models.Model):
+    student_id = models.IntegerField(unique=True, primary_key=True)
+    name = models.CharField(max_length=255, default='DefaultUsername')
+    email = models.CharField(max_length=255, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user_id
+
 class studentBooking(models.Model):
     booking_id = models.AutoField(primary_key=True)
     student_id = models.ForeignKey(UserAuth, on_delete=models.CASCADE)
