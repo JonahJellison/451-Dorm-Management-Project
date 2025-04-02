@@ -90,6 +90,7 @@ def login_user(request):
 @csrf_exempt
 def fetch_admin_data(request):
     if request.method == 'GET':
+        print("Fetching admin data...")
     # Fetch all student bookings and return as JSON response
         try:
             bookings = studentBooking.objects.all()
@@ -99,7 +100,6 @@ def fetch_admin_data(request):
                 booking_dict = {
                     'id': booking.booking_id,
                     'student_id': booking.student_id,
-                    'booking_date': booking.booking_date.isoformat() if booking.booking_date else None,
                     'lease_length': booking.lease_length,
                     'dorm_name': booking.dorm_name,
                     'room_number': booking.room_number,

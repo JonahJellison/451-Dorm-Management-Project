@@ -40,17 +40,14 @@ export class AdminDashboardComponent implements OnInit {
         this.recentBookings = response.bookings.map(booking => ({
           id: booking.id,
           student_id: booking.student_id,
-          student_name: booking.student_id, // Replace with actual student name when available
+          lease_length: booking.lease_length,
+          dorm_name: booking.dorm_name, 
           room_number: booking.room_number,
-          building: booking.dorm_name,
-          date: booking.booking_date || new Date().toISOString(),
-          status: booking.confirmed === null ? 'Pending' : 
-                 booking.confirmed ? 'Approved' : 'Denied',
-          confirmed: booking.confirmed
+          confirmed: booking.confirmed,
         }));
-
+        
         // Count pending requests
-        this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+        this.pendingRequests = this.recentBookings.filter(b => b.confirmed === false || b.confirmed === null).length;
         
         // Set other dashboard stats (would come from backend in a full implementation)
         this.totalStudents = this.recentBookings.length;
@@ -68,10 +65,9 @@ export class AdminDashboardComponent implements OnInit {
           // Update local booking status
           const booking = this.recentBookings.find(b => b.id === bookingId);
           if (booking) {
-            booking.status = 'Approved';
             booking.confirmed = true;
           }
-          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+          this.pendingRequests = this.recentBookings.filter(b => b.confirmed === false).length;
         },
         error: (error) => {
           console.error('Error confirming booking:', error);
@@ -86,10 +82,9 @@ export class AdminDashboardComponent implements OnInit {
           // Update local booking status
           const booking = this.recentBookings.find(b => b.id === bookingId);
           if (booking) {
-            booking.status = 'Denied';
             booking.confirmed = false;
           }
-          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+          this.pendingRequests = this.recentBookings.filter(b => b.confirmed === false).length;
         },
         error: (error) => {
           console.error('Error denying booking:', error);
@@ -119,11 +114,9 @@ export class AdminDashboardComponent implements OnInit {
 interface BookingData {
   id: number;
   student_id: string;
-  student_name: string;
+  lease_length: number;
+  dorm_name: string;
   room_number: string;
-  building: string;
-  date: string;
-  status: string;
   confirmed: boolean | null;
 }
 
