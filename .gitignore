@@ -1,6 +1,6 @@
 
 /451_venv
-/backend/backend/settings.py
+/.venv
 # Python / Django
 *.py[cod]
 __pycache__/
@@ -17,7 +17,6 @@ venv/
 
 # Django-specific files
 *.log
-local_settings.py
 .env
 .env.*
 *.coverage
