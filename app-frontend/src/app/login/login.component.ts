@@ -39,8 +39,8 @@ export class LoginComponent {
     this.http.post('http://localhost:8000/api/login', payload).subscribe(
       (response: any) => {
         console.log('Login successful:', response);
-        this.authservice.setUser(this.username); // Student ID
-
+        this.authservice.setUser(this.username!); // Student ID
+        localStorage.setItem('studentId', this.username!);
         this.router.navigate(['/dorm-bookings']);
       },
       (error) => {

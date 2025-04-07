@@ -36,20 +36,25 @@ export class AdminDashboardComponent implements OnInit {
       next: (response) => {
         console.log('Admin data received:', response);
         
-        // Map booking data to display format
+        // Map booking data to include fields used in the HTML template
         this.recentBookings = response.bookings.map(booking => ({
           id: booking.id,
           student_id: booking.student_id,
           lease_length: booking.lease_length,
-          dorm_name: booking.dorm_name, 
+          dorm_name: booking.dorm_name,
           room_number: booking.room_number,
           confirmed: booking.confirmed,
+          student_name: 'John Doe', // Replace with actual data if available
+          building: booking.dorm_name,
+          date: booking.booking_date,
+          status: booking.confirmed === null
+            ? 'Pending'
+            : booking.confirmed === true
+              ? 'Confirmed'
+              : 'Denied'
         }));
         
-        // Count pending requests
-        this.pendingRequests = this.recentBookings.filter(b => b.confirmed === false || b.confirmed === null).length;
-        
-        // Set other dashboard stats (would come from backend in a full implementation)
+        this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
         this.totalStudents = this.recentBookings.length;
       },
       error: (error) => {
@@ -62,12 +67,12 @@ export class AdminDashboardComponent implements OnInit {
     this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, confirmed: true })
       .subscribe({
         next: () => {
-          // Update local booking status
           const booking = this.recentBookings.find(b => b.id === bookingId);
           if (booking) {
             booking.confirmed = true;
+            booking.status = 'Confirmed';
           }
-          this.pendingRequests = this.recentBookings.filter(b => b.confirmed === false).length;
+          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
         },
         error: (error) => {
           console.error('Error confirming booking:', error);
@@ -79,12 +84,12 @@ export class AdminDashboardComponent implements OnInit {
     this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, confirmed: false })
       .subscribe({
         next: () => {
-          // Update local booking status
           const booking = this.recentBookings.find(b => b.id === bookingId);
           if (booking) {
             booking.confirmed = false;
+            booking.status = 'Denied';
           }
-          this.pendingRequests = this.recentBookings.filter(b => b.confirmed === false).length;
+          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
         },
         error: (error) => {
           console.error('Error denying booking:', error);
@@ -118,6 +123,12 @@ interface BookingData {
   dorm_name: string;
   room_number: string;
   confirmed: boolean | null;
+
+  // Additional fields for template
+  student_name: string;
+  building: string;
+  date: string | null;
+  status: 'Pending' | 'Confirmed' | 'Denied';
 }
 
 interface AdminDataResponse {
@@ -130,27 +141,4 @@ interface AdminDataResponse {
     room_number: string;
     confirmed: boolean | null;
   }[];
-}
-
-interface RecentBooking{
-  studentInfo: Student
-  roomNumber: number;
-  checkInDate: Date;
-  checkOutDate: Date;
-  approvalStatus: boolean;
-  building: string;
-}
-
-interface Room {
-  roomNumber: number;
-  building: string;
-  occupancy: number;
-  status: string;
-  maintenance: boolean;
-  studentId: string;
-}
-
-interface Student {
-  studentId: string;
-  studentName: string;
 }
