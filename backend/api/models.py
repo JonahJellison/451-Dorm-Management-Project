@@ -22,6 +22,7 @@ class Student(models.Model):
     def __str__(self):
         return str(self.student_id)
 
+
 '''
 Used to identify the booking status of a student for the admin page
 '''
@@ -34,9 +35,11 @@ class studentBooking(models.Model):
     dorm_name = models.CharField(max_length=255)
     room_number = models.CharField(max_length=50)
     confirmed = models.BooleanField(default=False)
+    
     def __str__(self):
         return str(self.booking_id)
     
+
 class Dorm(models.Model):
     dorm_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
@@ -45,6 +48,7 @@ class Dorm(models.Model):
 
     def __str__(self):
         return self.name
+
 
 class Room(models.Model):
     room_id = models.AutoField(primary_key=True)
@@ -57,5 +61,23 @@ class Room(models.Model):
     has_private_bath = models.BooleanField(default=False)
     cost_per_month = models.DecimalField(max_digits=6, decimal_places=2, default=0.00)
     current_occupants = models.IntegerField(default=0)
+    
     def __str__(self):
         return f"{self.dorm.name} - Room {self.room_number}"
+
+
+class StudentInfo(models.Model):
+    user = models.OneToOneField(
+        UserAuth,
+        on_delete=models.CASCADE,
+        related_name='student_info'
+    )
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    home_address = models.CharField(max_length=255, blank=True, null=True)
+    emergency_contact = models.CharField(max_length=255, blank=True, null=True)
+
+    class Meta:
+        db_table = 'student_info'
+
+    def __str__(self):
+        return f"Student Info for {self.user.user_id}"
