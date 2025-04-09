@@ -2,9 +2,14 @@ import json
 import hashlib
 import os
 from .models import *
+from django.shortcuts import redirect, render
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from .email_utility import send_confirmation_email
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_decode
 from .models import UserAuth
 import requests
 import json
@@ -41,15 +46,21 @@ def register_user(request):
             name=username,
             salt=salt_processed.hex(),  # Use the processed salt's hex representation
             hashed_password=hashed_password,
-            email=email
+            email=email,
+            is_active=False  # Set is_active to False initially for email confirmation
         )
         # Save the user to the database
         user.save()
         # Return success after saving the user
     except Exception as e:
         return HttpResponseBadRequest(f"Could not create user: {e}")
+    
+    try:
+        send_confirmation_email(request, user)  # Send confirmation email
+    except Exception as e:
+        return HttpResponseBadRequest(f"Could not send confirmation email: {e}")
 
-    return JsonResponse({'status': 'success', 'message': 'User registered successfully.'})
+    return JsonResponse({'status': 'success', 'message': 'User registered successfully.\Confirmation email sent.'})
    
 @csrf_exempt  # For testing purposes. In production, ensure proper CSRF handling.
 @require_POST
@@ -70,6 +81,9 @@ def login_user(request):
         print("User found:", user.user_id)
     except UserAuth.DoesNotExist:
         return HttpResponseBadRequest("User does not exist.")
+    
+    if not user.is_active:
+        return HttpResponseBadRequest("Account not activated. Please check your email for confirmation.")
 
     # Convert the stored hex salt back to bytes
     salt_bytes = bytes.fromhex(user.salt)
@@ -86,6 +100,21 @@ def login_user(request):
     else:
         return HttpResponseBadRequest("Invalid password.")
     
+@csrf_exempt
+def confirm_email(request, uidb64, token):
+    User = get_user_model()
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user and default_token_generator.check_token(user, token):
+        user.is_active = True   # Activate the account
+        user.save()
+        return JsonResponse({'status': 'success', 'message': 'Email confirmed successfully. You can log in now.'})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid or expired confirmation token.'}, status=400)
 
 @csrf_exempt
 def fetch_admin_data(request):

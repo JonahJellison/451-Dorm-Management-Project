@@ -59,7 +59,7 @@ export class CreateAccountComponent implements OnInit {
     this.http.post(url, payload).subscribe(
       (response) => {
         console.log('Registration successful:', response);
-        alert('Account created successfully!');
+        alert('Account created successfully, check your email for a verification link.');
         this.router.navigate(['/login']);
       },
       (error) => {

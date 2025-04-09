@@ -77,16 +77,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dormdata',
-        'USER': 'admin',
-        'PASSWORD': 'dataPassword',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
+try:
+    from .local_settings import DATABASES
+except ImportError as e:
+    raise ImportError("Could not import 'local_settings'. Ensure the file exists and is properly configured.") from e
+    
 
 
 # Password validation
@@ -107,6 +102,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Email configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Use console backend for development: 'django.core.mail.backends.console.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'dormemailer@gmail.com'
+EMAIL_HOST_PASSWORD = '451DormEmailer'
+DEFAULT_FROM_EMAIL = 'Automated Email <dormemailer@gmail.com>'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
