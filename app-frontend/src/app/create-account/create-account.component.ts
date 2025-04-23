@@ -35,7 +35,6 @@ export class CreateAccountComponent implements OnInit {
     this.passwordMismatch = false;
     console.log('Form submitted');
     if (this.registerForm.invalid) {
-      // Mark all fields as touched to display validation errors
       Object.keys(this.registerForm.controls).forEach(key => {
         const control = this.registerForm.get(key);
         control?.markAsTouched();

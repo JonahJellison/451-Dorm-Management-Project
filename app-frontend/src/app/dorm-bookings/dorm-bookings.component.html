@@ -52,7 +52,6 @@
             </form>
         </div>
         
-        <!-- Room cards display section -->
         <div class="room-cards-container">
             <div *ngIf="selected_dorms.length === 0" class="no-rooms-message">
                 No rooms available based on your filters.
@@ -75,7 +74,6 @@
         </div>
     </main>
     
-    <!-- Booking Popup -->
     <div class="booking-popup" *ngIf="showBookingPopup && selectedRoomForBooking">
         <div class="popup-content">
             <span class="close-btn" (click)="closeBookingPopup()">&times;</span>
@@ -112,7 +110,6 @@
 </div>
 
 <style>
-    /* Booking popup styles */
     .booking-popup {
         position: fixed;
         top: 0;

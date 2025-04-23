@@ -31,6 +31,7 @@ export class AdminDashboardComponent implements OnInit {
     this.fetchAdminData();
   }
 
+  // get all the admin data from the backend
   fetchAdminData(): void {
     this.http.get<AdminDataResponse>(`${this.apiUrl}/fetch_admin_data`).subscribe({
       next: (response) => {
@@ -116,6 +117,7 @@ export class AdminDashboardComponent implements OnInit {
   }
 }
 
+// interfaces to match data models from the backend
 interface BookingData {
   id: number;
   student_id: string;
@@ -124,7 +126,6 @@ interface BookingData {
   room_number: string;
   confirmed: boolean | null;
 
-  // Additional fields for template
   student_name: string;
   building: string;
   date: string | null;

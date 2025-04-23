@@ -74,7 +74,6 @@ export class AccountInfoComponent implements OnInit {
 
   // Called when the form is submitted.
   updateAllInfo(): void {
-    // Payload for updating user details.
     const userPayload = {
       user_id: this.studentId,
       name: this.name,

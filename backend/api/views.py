@@ -444,7 +444,6 @@ def maintenance_request(request):
                     'message': 'Student not found'
                 }, status=404)
                 
-            # Create maintenance request
             new_request = MaintenanceRequest(
                 student_id = student_id,
                 issue = issue,

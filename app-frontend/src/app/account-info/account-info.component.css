@@ -1,6 +1,4 @@
-/* Add this to your existing CSS file */
 
-/* Modal styles */
 .modal {
   display: none;
   position: fixed;
@@ -49,7 +47,6 @@
   margin-top: 20px;
 }
 
-/* Form field styles for maintenance request */
 #maintenance-issue {
   width: 100%;
   padding: 10px;

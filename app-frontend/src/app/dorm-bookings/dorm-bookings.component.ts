@@ -52,7 +52,6 @@ export class DormBookingsComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    // stop polling when component is destroyed
     this.pollSub?.unsubscribe();
   }
 
