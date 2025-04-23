@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../auth-service/auth.service';
+import { interval, Subscription } from 'rxjs';
+
 @Component({
   selector: 'app-dorm-bookings',
   templateUrl: './dorm-bookings.component.html',
@@ -10,119 +12,124 @@ import { AuthService } from '../auth-service/auth.service';
   imports: [CommonModule, FormsModule, HttpClientModule],
   standalone: true
 })
+export class DormBookingsComponent implements OnInit, OnDestroy {
+  studentId: string | null = null;
 
-export class DormBookingsComponent implements OnInit {
-constructor(private http: HttpClient, private authservice: AuthService) {}
+  selectedBuilding   = '';
+  selectedRoomType   = '';
+  selectedPriceRange = '';
 
-ngOnInit(): void {
-  this.studentId = this.authservice.getUser(); // Get student ID from auth service
-  console.log('On dorm booking page with Student ID:', this.studentId);
-  // Initialize component by loading dorm data
-  this.applyFilters();
-}
+  duncan_img    = "/duncan_dunn.jpg";
+  global_img    = "/global_scholars.jpg";
+  honors_img    = "/honors.jpg";
+  northside_img = "/northside.jpg";
 
-studentId: string | null = null;
+  selected_dorms: Room[] = [];
+  selectedRoomForBooking: Room | null = null;
+  showBookingPopup = false;
+  requestRoommate  = false;
+  roommateStudentId = '';
+  leaseDuration    = 6; // Default to 6 months
 
-selectedBuilding: string = '';
-selectedRoomType: string = '';
-selectedPriceRange: string = '';
+  private pollSub?: Subscription;
 
-duncan_img: string = "/duncan_dunn.jpg";
-global_img: string = "/global_scholars.jpg";
-honors_img: string = "/honors.jpg";
-northside_img: string = "/northside.jpg";
+  constructor(
+    private http: HttpClient,
+    private authservice: AuthService
+  ) {}
 
-selected_dorms: Room[] = [];
-selectedRoomForBooking: Room | null = null;
-showBookingPopup: boolean = false;
-requestRoommate: boolean = false;
-roommateStudentId: string = '';
-leaseDuration: number = 6; // Default to 6 months
+  ngOnInit(): void {
+    this.studentId = this.authservice.getUser();
+    console.log('On dorm booking page with Student ID:', this.studentId);
 
-getDormImage(dormName: string): string {
-  console.log('Getting image for dorm:', dormName);
-  switch(dormName.toLowerCase()) {
-    case 'duncan dunn':
-      return this.duncan_img;
-    case 'global scholars':
-      return this.global_img;
-    case 'honors hall':
-      return this.honors_img;
-    case 'northside':
-      return this.northside_img;
-    default:
-      return ''; // Default image or empty string if no match
-  }
-}
+    // load immediately
+    this.applyFilters();
 
-applyFilters() {
-  console.log('Filtering with:', {
-    building: (this.selectedBuilding !== '' ? this.selectedBuilding : 'All'),
-    roomType: (this.selectedRoomType !== '' ? this.selectedRoomType : 'All'),
-    priceRange: (this.selectedPriceRange !== '' ? this.selectedPriceRange : 'All')
-  });
-
-  const filters = {
-    building: (this.selectedBuilding !== '' ? this.selectedBuilding : 'All'),
-    roomType: (this.selectedRoomType !== '' ? this.selectedRoomType : 'All'),
-    priceRange: (this.selectedPriceRange !== '' ? this.selectedPriceRange : 'All')
-  }
-  
-  interface RoomResponse {
-    rooms: Room[];
-  }
-  
-  this.http.get<RoomResponse>('http://127.0.0.1:8000/api/fetch_dormroom_data', { params: filters })
-    .subscribe((response: RoomResponse) => {
-      this.selected_dorms = response.rooms;
-      console.log('Filtered dorms:', this.selected_dorms);
+    // then poll every 5 seconds
+    this.pollSub = interval(5000).subscribe(() => {
+      this.applyFilters();
     });
-}
+  }
 
-openBookingPopup(room: Room) {
-  this.selectedRoomForBooking = room;
-  this.showBookingPopup = true;
-  this.requestRoommate = false;
-  this.roommateStudentId = '';
-  this.leaseDuration = 6; // Reset to default when opening popup
-}
+  ngOnDestroy(): void {
+    // stop polling when component is destroyed
+    this.pollSub?.unsubscribe();
+  }
 
-closeBookingPopup() {
-  this.showBookingPopup = false;
-  this.selectedRoomForBooking = null;
-}
+  getDormImage(dormName: string): string {
+    switch (dormName.toLowerCase()) {
+      case 'duncan dunn':     return this.duncan_img;
+      case 'global scholars': return this.global_img;
+      case 'honors hall':     return this.honors_img;
+      case 'northside':       return this.northside_img;
+      default: return '';
+    }
+  }
 
-submitBooking() {
-  if (!this.selectedRoomForBooking) return;
-  
-  const bookingData = {
-    student_id: this.studentId,
-    room_id: this.selectedRoomForBooking.room_id,
-    request_roommate: this.requestRoommate,
-    roommate_student_id: this.requestRoommate ? this.roommateStudentId : null,
-    lease_duration: this.leaseDuration
-  };
-  
-  console.log('Submitting booking:', bookingData);
-  
-  // Here you would send the booking data to your API
-  this.http.post('http://127.0.0.1:8000/api/book_room', bookingData)
-    .subscribe(
-      (response) => {
-        console.log('Booking successful:', response);
-        alert('Room booked successfully!');
-        this.closeBookingPopup();
+  applyFilters(): void {
+    const filters = {
+      building:   this.selectedBuilding   || 'All',
+      roomType:   this.selectedRoomType   || 'All',
+      priceRange: this.selectedPriceRange || 'All'
+    };
+
+    console.log('Filtering with', filters);
+
+    interface RoomResponse { rooms: Room[]; }
+
+    this.http.get<RoomResponse>(
+      'http://127.0.0.1:8000/api/fetch_dormroom_data',
+      { params: filters }
+    ).subscribe(
+      res => {
+        this.selected_dorms = res.rooms;
+        console.log('Fetched dorms:', this.selected_dorms);
       },
-      (error) => {
-        console.error('Booking error:', error);
-        alert('Error booking room. Please try again.');
-      }
+      err => console.error('Error fetching dorms', err)
     );
+  }
+
+  openBookingPopup(room: Room): void {
+    this.selectedRoomForBooking = room;
+    this.showBookingPopup = true;
+    this.requestRoommate = false;
+    this.roommateStudentId = '';
+    this.leaseDuration = 6;
+  }
+
+  closeBookingPopup(): void {
+    this.showBookingPopup = false;
+    this.selectedRoomForBooking = null;
+  }
+
+  submitBooking(): void {
+    if (!this.selectedRoomForBooking) return;
+
+    const bookingData = {
+      student_id: this.studentId,
+      room_id: this.selectedRoomForBooking.room_id,
+      request_roommate: this.requestRoommate,
+      roommate_student_id: this.requestRoommate ? this.roommateStudentId : null,
+      lease_duration: this.leaseDuration
+    };
+
+    console.log('Submitting booking:', bookingData);
+
+    this.http.post('http://127.0.0.1:8000/api/book_room', bookingData)
+      .subscribe(
+        () => {
+          alert('Room booked successfully!');
+          this.closeBookingPopup();
+        },
+        err => {
+          console.error('Booking error', err);
+          alert('Error booking room. Please try again.');
+        }
+      );
+  }
 }
 
-}
-
-interface Room {
+export interface Room {
   room_id: number;
   dorm_name: string;
   room_number: string;
