@@ -11,4 +11,5 @@ urlpatterns = [
     path('fetch_student_data',views.fetch_student_data,name='student_data_fetch'),
     path('student_info', views.student_info_view, name='student_info'),
     path('update_student_info',views.update_user_info,name='update_student_info'),
+    path('maintenance_request', views.maintenance_request, name='maintenance_request'),
 ]

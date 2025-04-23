@@ -81,3 +81,15 @@ class StudentInfo(models.Model):
 
     def __str__(self):
         return f"Student Info for {self.user.user_id}"
+
+
+class MaintenanceRequest(models.Model):
+    request_id = models.AutoField(primary_key=True)
+    student_id = models.CharField(max_length=25)
+    issue = models.CharField(max_length=2000)
+    location = models.CharField(max_length=1000)
+    priority = models.CharField(max_length=50)
+    date_created = models.CharField(max_length=50)
+
+    def __str__(self):
+        return f"Request #{self.request_id} - {self.request_type}"

@@ -415,3 +415,105 @@ def update_user_info(request):
         return JsonResponse(response_data)
     else:
         return HttpResponseBadRequest("Invalid request method. Use POST.")
+    
+
+@csrf_exempt
+def maintenance_request(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            student_id = data.get('studentId')
+            location = data.get('location')
+            issue = data.get('issue')
+            submissionDate = data.get('submissionDate')
+            priority = data.get('priority')
+            
+            # Validate required fields
+            if not all([student_id, location, issue, submissionDate, priority]):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Missing required fields'
+                }, status=400)
+                
+            # Get the user
+            try:
+                user = UserAuth.objects.get(user_id=student_id)
+            except UserAuth.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Student not found'
+                }, status=404)
+                
+            # Create maintenance request
+            new_request = MaintenanceRequest(
+                student_id = student_id,
+                issue = issue,
+                location = location,    
+                priority = priority,
+                date_created = submissionDate
+            )
+            new_request.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Maintenance request submitted successfully',
+                'request_id': new_request.request_id
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error processing request: {str(e)}'
+            }, status=500)
+    
+    elif request.method == 'GET':
+        student_id = request.GET.get('student_id')
+        if not student_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing student ID parameter'
+            }, status=400)
+            
+        try:
+            user = UserAuth.objects.get(user_id=student_id)
+            requests = MaintenanceRequest.objects.filter(student=user).order_by('-created_at')
+            
+            requests_data = []
+            for req in requests:
+                requests_data.append({
+                    'request_id': req.request_id,
+                    'dorm_name': req.dorm_name,
+                    'room_number': req.room_number,
+                    'request_type': req.request_type,
+                    'description': req.description,
+                    'status': req.status,
+                    'created_at': req.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'resolved_at': req.resolved_at.strftime('%Y-%m-%d %H:%M:%S') if req.resolved_at else None
+                })
+                
+            return JsonResponse({
+                'status': 'success',
+                'requests': requests_data
+            })
+            
+        except UserAuth.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error retrieving requests: {str(e)}'
+            }, status=500)
+    
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed. Use POST to create a request or GET to retrieve requests.'
+        }, status=405)

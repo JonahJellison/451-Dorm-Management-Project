@@ -24,6 +24,7 @@
     
           <ul class="account-menu">
             <li class="active"><a href="#personal-info">Personal Information</a></li>
+            <li><a href="#" (click)="openMaintenanceModal($event)">Maintenance Request</a></li>
           </ul>
         </div>
     
@@ -80,5 +81,35 @@
         </div>
       </div>
     </main>
+    
+    <!-- Maintenance Request Modal -->
+    <div class="modal" [class.show-modal]="showMaintenanceModal">
+      <div class="modal-content">
+        <span class="close-button" (click)="closeMaintenanceModal()">&times;</span>
+        <h2>Maintenance Request</h2>
+        <form (submit)="submitMaintenanceRequest($event)">
+          <div class="form-group">
+            <label for="maintenance-issue">Describe the Issue</label>
+            <textarea id="maintenance-issue" name="issue" [(ngModel)]="maintenanceIssue" rows="4" required placeholder="Please describe the maintenance issue in detail..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="maintenance-location">Location</label>
+            <input type="text" id="maintenance-location" name="location" [(ngModel)]="maintenanceLocation" required placeholder="Room number/location">
+          </div>
+          <div class="form-group">
+            <label for="maintenance-priority">Priority</label>
+            <select id="maintenance-priority" name="priority" [(ngModel)]="maintenancePriority">
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" (click)="closeMaintenanceModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Submit Request</button>
+          </div>
+        </form>
+      </div>
+    </div>
   </div>
-  

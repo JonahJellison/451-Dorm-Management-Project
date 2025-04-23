@@ -21,6 +21,12 @@ export class AccountInfoComponent implements OnInit {
   phone: string = '';
   homeAddress: string = '';
   emergencyContact: string = '';
+  
+  // Maintenance request modal properties
+  showMaintenanceModal: boolean = false;
+  maintenanceIssue: string = '';
+  maintenanceLocation: string = '';
+  maintenancePriority: string = 'medium';
 
   constructor(private http: HttpClient) {}
 
@@ -97,5 +103,46 @@ export class AccountInfoComponent implements OnInit {
         alert('Error updating information.');
       }
     });
+  }
+  
+  // Opens the maintenance request modal
+  openMaintenanceModal(event: Event): void {
+    event.preventDefault();
+    this.showMaintenanceModal = true;
+  }
+  
+  // Closes the maintenance request modal
+  closeMaintenanceModal(): void {
+    this.showMaintenanceModal = false;
+    // Reset form fields
+    this.maintenanceIssue = '';
+    this.maintenanceLocation = '';
+    this.maintenancePriority = 'medium';
+  }
+  
+  // Submits the maintenance request to the backend
+  submitMaintenanceRequest(event: Event): void {
+    event.preventDefault();
+    
+    const payload = {
+      studentId: this.studentId,
+      issue: this.maintenanceIssue,
+      location: this.maintenanceLocation,
+      priority: this.maintenancePriority,
+      submissionDate: new Date().toISOString()
+    };
+    console.log('Submitting maintenance request:', payload);
+    this.http.post('http://localhost:8000/api/maintenance_request', payload)
+      .subscribe({
+        next: (response) => {
+          console.log('Maintenance request submitted successfully:', response);
+          alert('Maintenance request submitted successfully.');
+          this.closeMaintenanceModal();
+        },
+        error: (error) => {
+          console.error('Error submitting maintenance request:', error);
+          alert('Error submitting maintenance request. Please try again.');
+        }
+      });
   }
 }
