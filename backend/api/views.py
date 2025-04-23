@@ -96,6 +96,8 @@ def fetch_admin_data(request):
             bookings_data = []
             maintenance_data = []
             maintenance_requests = MaintenanceRequest.objects.all()
+            occupied_rooms = Room.objects.filter(is_available=False)
+            room_data = []
             for request in maintenance_requests:
                 request_dict = {
                     'id': request.request_id,
@@ -116,8 +118,17 @@ def fetch_admin_data(request):
                     'confirmed': booking.confirmed
                 }
                 bookings_data.append(booking_dict)
-            
-            return JsonResponse({'bookings': bookings_data})
+            for room in occupied_rooms:
+                room_dict = {
+                    'room_id': room.room_id,
+                    'dorm_name': room.dorm.name,
+                    'room_number': room.room_number,
+                    'capacity': room.capacity,
+                    'current_occupants': room.current_occupants
+                }
+                room_data.append(room_dict)
+
+            return JsonResponse({'bookings': bookings_data, 'maintenance_requests': maintenance_data, 'occupied_rooms': room_data})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
 
