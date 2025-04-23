@@ -9,7 +9,7 @@ from .models import UserAuth
 import requests
 import json
 from datetime import datetime  # Add this import at the top
- 
+
 @csrf_exempt  # For testing purposes. In production, ensure proper CSRF handling.
 @require_POST
 def register_user(request):
