@@ -19,7 +19,7 @@ export class LoginComponent {
   
 
   login(): void {
-    // Validate that the fields are provided
+    // validate
     if (!this.username || !this.password) {
       console.error('Student ID and Password must be provided');
       return;
@@ -29,23 +29,21 @@ export class LoginComponent {
       return;
     }
     
-    // Build the payload matching the Django view's expectations.
+    // create data to send to the backend
     const payload = {
       id: this.username,
       password: this.password
     };
 
-    // Call the Django backend login endpoint.
     this.http.post('http://localhost:8000/api/login', payload).subscribe(
       (response: any) => {
         console.log('Login successful:', response);
-        this.authservice.setUser(this.username); // Student ID
-
+        this.authservice.setUser(this.username!); // Student ID
+        localStorage.setItem('studentId', this.username!);
         this.router.navigate(['/dorm-bookings']);
       },
       (error) => {
         console.error('Login error:', error);
-        // TODO: Display error message to the user when they type in wrong password
       }
     );
   }

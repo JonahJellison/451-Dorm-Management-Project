@@ -3,8 +3,7 @@
         <nav>
             <div class="logo">Dorm Management System</div>
             <ul class="nav-links">
-                <li><a href="booking.html" class="active">Book a Room</a></li>
-                <li><a href="account.html">My Account</a></li>
+                <li><a href="account-info">My Account</a></li>
                 <li><a href="index.html">Logout</a></li>
             </ul>
         </nav>
@@ -53,7 +52,6 @@
             </form>
         </div>
         
-        <!-- Room cards display section -->
         <div class="room-cards-container">
             <div *ngIf="selected_dorms.length === 0" class="no-rooms-message">
                 No rooms available based on your filters.
@@ -76,7 +74,6 @@
         </div>
     </main>
     
-    <!-- Booking Popup -->
     <div class="booking-popup" *ngIf="showBookingPopup && selectedRoomForBooking">
         <div class="popup-content">
             <span class="close-btn" (click)="closeBookingPopup()">&times;</span>
@@ -113,7 +110,6 @@
 </div>
 
 <style>
-    /* Booking popup styles */
     .booking-popup {
         position: fixed;
         top: 0;

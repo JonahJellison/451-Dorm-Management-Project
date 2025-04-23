@@ -141,10 +141,6 @@ def fetch_admin_data(request):
             return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
-def fetch_student_data(request):
-    pass
-
-@csrf_exempt
 def fetch_dormroom_data(request):
     if request.method == 'GET':
         # Get parameters from the URL query string instead of the body
@@ -315,4 +311,237 @@ def book_room(request):
         'message': 'Invalid request method. Use POST.'
     }, status=405)
 
+@csrf_exempt
+def fetch_student_data(request):
+    if request.method == 'GET':
+        student_id = request.GET.get('studentId')
+        if not student_id:
+            return HttpResponseBadRequest("Missing studentId parameter.")
+        try:
+            user = UserAuth.objects.get(user_id=student_id)
+            data = {
+                'student_id': user.user_id,
+                'name': user.name,
+                'email': user.email,
+            }
+            return JsonResponse(data)
+        except UserAuth.DoesNotExist:
+            return HttpResponseBadRequest("Student not found.")
+    else:
+        return HttpResponseBadRequest("Invalid request method.")
 
+@csrf_exempt
+def student_info_view(request):
+    if request.method == 'GET':
+        # Retrieve the studentId from the query string
+        student_id = request.GET.get('studentId')
+        if not student_id:
+            return HttpResponseBadRequest("Missing studentId parameter.")
+        try:
+            user = UserAuth.objects.get(user_id=student_id)
+        except UserAuth.DoesNotExist:
+            return HttpResponseBadRequest("Student not found.")
+        
+        # Try to get the associated StudentInfo record, if it exists
+        try:
+            info = StudentInfo.objects.get(user=user)
+        except StudentInfo.DoesNotExist:
+            info = None
+
+        response_data = {
+            'student_id': user.user_id,
+            'phone_number': info.phone_number if info else None,
+            'home_address': info.home_address if info else None,
+            'emergency_contact': info.emergency_contact if info else None,
+        }
+        return JsonResponse(response_data)
+
+    elif request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest("Invalid JSON data.")
+
+        student_id = data.get('studentId')
+        if not student_id:
+            return HttpResponseBadRequest("Missing studentId in JSON data.")
+
+        try:
+            user = UserAuth.objects.get(user_id=student_id)
+        except UserAuth.DoesNotExist:
+            return HttpResponseBadRequest("Student not found.")
+
+        # Get the values to update/create
+        phone_number = data.get('phone_number')
+        home_address = data.get('home_address')
+        emergency_contact = data.get('emergency_contact')
+
+        # Create or update the StudentInfo record linked to the user
+        info, created = StudentInfo.objects.update_or_create(
+            user=user,
+            defaults={
+                'phone_number': phone_number,
+                'home_address': home_address,
+                'emergency_contact': emergency_contact,
+            }
+        )
+
+        response_data = {
+            'status': 'success',
+            'message': 'Student info updated successfully.' if not created else 'Student info created successfully.',
+            'student_id': user.user_id,
+            'phone_number': info.phone_number,
+            'home_address': info.home_address,
+            'emergency_contact': info.emergency_contact,
+        }
+        return JsonResponse(response_data)
+    
+    else:
+        return HttpResponseBadRequest("Invalid request method. Use GET or POST.")
+
+@csrf_exempt
+def update_user_info(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest("Invalid JSON data.")
+        
+        user_id = data.get('user_id')
+        if not user_id:
+            return HttpResponseBadRequest("Missing user_id in request.")
+        
+        try:
+            user = UserAuth.objects.get(user_id=user_id)
+        except UserAuth.DoesNotExist:
+            return HttpResponseBadRequest("User not found.")
+        
+        # Retrieve new values for name and email from the payload.
+        new_name = data.get('name')
+        new_email = data.get('email')
+        
+        # Optional: Validate that new_name and new_email are provided.
+        if not new_name or not new_email:
+            return HttpResponseBadRequest("Both name and email must be provided.")
+        
+        user.name = new_name
+        user.email = new_email
+        
+        try:
+            user.save()
+        except Exception as e:
+            return HttpResponseBadRequest(f"Error updating user info: {str(e)}")
+        
+        response_data = {
+            'status': 'success',
+            'message': 'User info updated successfully.',
+            'user': {
+                'user_id': user.user_id,
+                'name': user.name,
+                'email': user.email
+            }
+        }
+        return JsonResponse(response_data)
+    else:
+        return HttpResponseBadRequest("Invalid request method. Use POST.")
+    
+
+@csrf_exempt
+def maintenance_request(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            student_id = data.get('studentId')
+            location = data.get('location')
+            issue = data.get('issue')
+            submissionDate = data.get('submissionDate')
+            priority = data.get('priority')
+            
+            # Validate required fields
+            if not all([student_id, location, issue, submissionDate, priority]):
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Missing required fields'
+                }, status=400)
+                
+            # Get the user
+            try:
+                user = UserAuth.objects.get(user_id=student_id)
+            except UserAuth.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Student not found'
+                }, status=404)
+                
+            new_request = MaintenanceRequest(
+                student_id = student_id,
+                issue = issue,
+                location = location,    
+                priority = priority,
+                date_created = submissionDate
+            )
+            new_request.save()
+            
+            return JsonResponse({
+                'status': 'success',
+                'message': 'Maintenance request submitted successfully',
+                'request_id': new_request.request_id
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error processing request: {str(e)}'
+            }, status=500)
+    
+    elif request.method == 'GET':
+        student_id = request.GET.get('student_id')
+        if not student_id:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing student ID parameter'
+            }, status=400)
+            
+        try:
+            user = UserAuth.objects.get(user_id=student_id)
+            requests = MaintenanceRequest.objects.filter(student=user).order_by('-created_at')
+            
+            requests_data = []
+            for req in requests:
+                requests_data.append({
+                    'request_id': req.request_id,
+                    'dorm_name': req.dorm_name,
+                    'room_number': req.room_number,
+                    'request_type': req.request_type,
+                    'description': req.description,
+                    'status': req.status,
+                    'created_at': req.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                    'resolved_at': req.resolved_at.strftime('%Y-%m-%d %H:%M:%S') if req.resolved_at else None
+                })
+                
+            return JsonResponse({
+                'status': 'success',
+                'requests': requests_data
+            })
+            
+        except UserAuth.DoesNotExist:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Student not found'
+            }, status=404)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error retrieving requests: {str(e)}'
+            }, status=500)
+    
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed. Use POST to create a request or GET to retrieve requests.'
+        }, status=405)
