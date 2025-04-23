@@ -90,12 +90,22 @@ def login_user(request):
 @csrf_exempt
 def fetch_admin_data(request):
     if request.method == 'GET':
-        print("Fetching admin data...")
-    # Fetch all student bookings and return as JSON response
+    # Fetch all admin data and return as JSON response
         try:
             bookings = studentBooking.objects.all()
             bookings_data = []
-            
+            maintenance_data = []
+            maintenance_requests = MaintenanceRequest.objects.all()
+            for request in maintenance_requests:
+                request_dict = {
+                    'id': request.request_id,
+                    'student_id': request.student_id,
+                    'issue': request.issue,
+                    'location': request.location,
+                    'priority': request.priority,
+                    'date_created': request.date_created
+                }
+                maintenance_data.append(request_dict)
             for booking in bookings:
                 booking_dict = {
                     'id': booking.booking_id,
@@ -470,49 +480,16 @@ def maintenance_request(request):
                 'message': f'Error processing request: {str(e)}'
             }, status=500)
     
-    elif request.method == 'GET':
-        student_id = request.GET.get('student_id')
-        if not student_id:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Missing student ID parameter'
-            }, status=400)
-            
-        try:
-            user = UserAuth.objects.get(user_id=student_id)
-            requests = MaintenanceRequest.objects.filter(student=user).order_by('-created_at')
-            
-            requests_data = []
-            for req in requests:
-                requests_data.append({
-                    'request_id': req.request_id,
-                    'dorm_name': req.dorm_name,
-                    'room_number': req.room_number,
-                    'request_type': req.request_type,
-                    'description': req.description,
-                    'status': req.status,
-                    'created_at': req.created_at.strftime('%Y-%m-%d %H:%M:%S'),
-                    'resolved_at': req.resolved_at.strftime('%Y-%m-%d %H:%M:%S') if req.resolved_at else None
-                })
-                
-            return JsonResponse({
-                'status': 'success',
-                'requests': requests_data
-            })
-            
-        except UserAuth.DoesNotExist:
-            return JsonResponse({
-                'status': 'error',
-                'message': 'Student not found'
-            }, status=404)
-        except Exception as e:
-            return JsonResponse({
-                'status': 'error',
-                'message': f'Error retrieving requests: {str(e)}'
-            }, status=500)
-    
     else:
         return JsonResponse({
             'status': 'error',
             'message': 'Method not allowed. Use POST to create a request or GET to retrieve requests.'
         }, status=405)
+
+
+@csrf_exempt
+def confirm_booking(request):
+    pass
+
+def deny_booking(request):
+    pass

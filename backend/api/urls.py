@@ -12,4 +12,6 @@ urlpatterns = [
     path('student_info', views.student_info_view, name='student_info'),
     path('update_student_info',views.update_user_info,name='update_student_info'),
     path('maintenance_request', views.maintenance_request, name='maintenance_request'),
+    path('confirm_booking', views.confirm_booking, name='confirm_booking'),
+    path('deny_booking', views.deny_booking, name='deny_booking'),
 ]
