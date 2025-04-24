@@ -34,8 +34,8 @@ class studentBooking(models.Model):
     lease_length  = models.IntegerField()
     dorm_name     = models.CharField(max_length=255)
     room_number   = models.CharField(max_length=50)
-    # allow null so we can represent Pending = None
     confirmed     = models.BooleanField(null=True, blank=True, default=None)
+    status        = models.BooleanField(null=True, blank=True, default=None)
 
     def __str__(self):
         return str(self.booking_id)
@@ -91,6 +91,7 @@ class MaintenanceRequest(models.Model):
     location = models.CharField(max_length=1000)
     priority = models.CharField(max_length=50)
     date_created = models.CharField(max_length=50)
-
+    status       = models.BooleanField(null=True, blank=True, default=None)
+    
     def __str__(self):
         return f"Request #{self.request_id} - {self.request_type}"

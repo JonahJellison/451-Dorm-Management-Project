@@ -18,7 +18,6 @@
   
       <main class="admin-content">
         <section *ngIf="dashboadView" class="admin-section">
-          <!-- … your dashboard cards here … -->
   
           <!-- Recent Bookings -->
           <div class="recent-bookings">
@@ -53,77 +52,70 @@
             </table>
           </div>
   
-        <!-- Maintenance Requests -->
-        <div class="maintenance-requests">
-           <h3>Maintenance Requests</h3>
-           <table class="admin-table">
-             <thead>
-               <tr>
-                 <th>Request ID</th>
-                 <th>Student ID</th>
-                 <th>Issue</th>
-                 <th>Location</th>
-                 <th>Priority</th>
-                 <th>Date</th>
-                 <th>Status</th>
-                 <th>Actions</th>
-               </tr>
-             </thead>
-             <tbody>
-               <tr *ngFor="let r of maintenanceList">
-                 <td>{{r.id}}</td>
-                 <td>{{r.student_id}}</td>
-                 <td>{{r.issue}}</td>
-                 <td>{{r.location}}</td>
-                 <td>{{r.priority}}</td>
-                 <td>{{r.date_created}}</td>
-                 <!-- tri-state status display -->
-                 <td>
-                   <span [class]="'status-' + (
-                       r.status===null ? 'pending' :
-                       r.status ? 'approved' : 'denied'
-                     )">
-                     {{ r.status===null ? 'Pending' : (r.status ? 'Approved' : 'Denied') }}
-                   </span>
-                 </td>
-                 <!-- only show buttons when Pending -->
-                 <td>
-                   <button *ngIf="r.status === null"
-                           class="btn-action"
-                           (click)="updateMaintenance(r, 'Approved')">
-                     Approve
-                   </button>
-                   <button *ngIf="r.status === null"
-                           class="btn-action"
-                           (click)="updateMaintenance(r, 'Denied')">
-                     Deny
-                   </button>
-                 </td>
-               </tr>
-               <tr *ngIf="maintenanceList.length === 0">
-                 <td colspan="8" class="text-center">No maintenance requests</td>
-               </tr>
-             </tbody>
-           </table>
-         </div>
+          <!-- Maintenance Requests -->
+          <div class="maintenance-requests">
+            <h3>Maintenance Requests</h3>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th><th>Student ID</th><th>Issue</th>
+                  <th>Location</th><th>Priority</th><th>Date</th>
+                  <th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of maintenanceList">
+                  <td>{{r.id}}</td>
+                  <td>{{r.student_id}}</td>
+                  <td>{{r.issue}}</td>
+                  <td>{{r.location}}</td>
+                  <td>{{r.priority}}</td>
+                  <td>{{r.date_created}}</td>
+                  <td>
+                    <span [class]="'status-'+(
+                      r.status===null ? 'pending' :
+                      r.status ? 'approved' : 'denied'
+                    )">
+                      {{ r.status===null ? 'Pending' : (r.status ? 'Approved' : 'Denied') }}
+                    </span>
+                  </td>
+                  <td>
+                    <button *ngIf="r.status === null"
+                            class="btn-action"
+                            (click)="updateMaintenance(r,'Approved')">
+                      Approve
+                    </button>
+                    <button *ngIf="r.status === null"
+                            class="btn-action"
+                            (click)="updateMaintenance(r,'Denied')">
+                      Deny
+                    </button>
+                  </td>
+                </tr>
+                <tr *ngIf="maintenanceList.length===0">
+                  <td colspan="8" class="text-center">No maintenance requests</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
   
-          <!-- Occupied Rooms -->
+          <!-- Occupied Rooms (Confirmed Bookings) -->
           <div class="occupied-rooms">
             <h3>Occupied Rooms</h3>
             <table class="admin-table">
               <thead>
                 <tr>
-                  <th>Room ID</th><th>Building</th><th>Room Number</th>
-                  <th>Capacity</th><th>Occupants</th>
+                  <th>Booking ID</th><th>Student ID</th><th>Building</th>
+                  <th>Room</th><th>Date</th>
                 </tr>
               </thead>
               <tbody>
                 <tr *ngFor="let o of occupiedRoomsList">
-                  <td>{{o.room_id}}</td>
+                  <td>{{o.id}}</td>
+                  <td>{{o.student_id}}</td>
                   <td>{{o.dorm_name}}</td>
                   <td>{{o.room_number}}</td>
-                  <td>{{o.capacity}}</td>
-                  <td>{{o.current_occupants}}</td>
+                  <td>{{o.booking_date | date:'yyyy-MM-dd'}}</td>
                 </tr>
                 <tr *ngIf="occupiedRoomsList.length===0">
                   <td colspan="5" class="text-center">No occupied rooms</td>
@@ -136,11 +128,36 @@
       </main>
     </div>
   
-    <!-- Booking Modal (unchanged) -->
+    <!-- Booking Modal -->
     <div *ngIf="showModal" class="modal-backdrop">
       <div class="modal">
         <h4>Booking #{{selectedBooking?.id}}</h4>
-        <!-- … same modal content … -->
+  
+        <p><strong>Student ID:</strong> {{selectedBooking?.student_id}}</p>
+        <p><strong>Lease Length:</strong> {{selectedBooking?.lease_length}} months</p>
+        <p><strong>Building:</strong> {{selectedBooking?.building}}</p>
+        <p><strong>Room #:</strong> {{selectedBooking?.room_number}}</p>
+        <p><strong>Date:</strong> {{selectedBooking?.date | date:'yyyy-MM-dd'}}</p>
+  
+        <div class="status-radios">
+          <label>
+            <input type="radio" name="status"
+                   [(ngModel)]="selectedStatus" value="Pending" /> Pending
+          </label>
+          <label>
+            <input type="radio" name="status"
+                   [(ngModel)]="selectedStatus" value="Confirmed" /> Confirm
+          </label>
+          <label>
+            <input type="radio" name="status"
+                   [(ngModel)]="selectedStatus" value="Denied" /> Deny
+          </label>
+        </div>
+  
+        <div class="modal-actions">
+          <button class="btn-action" (click)="saveBookingStatus()">Save</button>
+          <button class="btn-action" (click)="showModal=false">Cancel</button>
+        </div>
       </div>
     </div>
   </div>
