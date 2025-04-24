@@ -28,15 +28,15 @@ class Student(models.Model):
 Used to identify the booking status of a student for the admin page
 '''
 class studentBooking(models.Model):
-    booking_id = models.AutoField(primary_key=True)
-    student_id = models.ForeignKey(UserAuth, on_delete=models.CASCADE)
-    booking_date = models.DateTimeField(auto_now_add=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    lease_length = models.IntegerField()
-    dorm_name = models.CharField(max_length=255)
-    room_number = models.CharField(max_length=50)
-    confirmed = models.BooleanField(default=False)
-    
+    booking_id    = models.AutoField(primary_key=True)
+    student_id    = models.ForeignKey(UserAuth, on_delete=models.CASCADE)
+    booking_date  = models.DateTimeField(auto_now_add=True)
+    lease_length  = models.IntegerField()
+    dorm_name     = models.CharField(max_length=255)
+    room_number   = models.CharField(max_length=50)
+    # allow null so we can represent Pending = None
+    confirmed     = models.BooleanField(null=True, blank=True, default=None)
+
     def __str__(self):
         return str(self.booking_id)
     

@@ -206,7 +206,6 @@ def book_room(request):
                         lease_length=lease_length,
                         dorm_name=dorm_name,
                         room_number=room_number,
-                        confirmed=False  
                     )
                     print("New booking created:", newBooking)
                     
@@ -457,57 +456,92 @@ def maintenance_request(request):
 
 @csrf_exempt
 def fetch_admin_data(request):
-    if request.method == 'GET':
-    # Fetch all admin data and return as JSON response
-        try:
-            bookings = studentBooking.objects.all()
-            bookings_data = []
-
-            maintenance_requests = MaintenanceRequest.objects.all()
-            maintenance_data = []
-
-            occupied_rooms = Room.objects.filter(is_available=False)
-            occupied_room_data = []
-
-            for request in maintenance_requests:
-                request_dict = {
-                    'id': request.request_id,
-                    'student_id': request.student_id,  
-                    'issue': request.issue,
-                    'location': request.location,
-                    'priority': request.priority,
-                    'date_created': request.date_created
-                }
-                maintenance_data.append(request_dict)
-
-            for booking in bookings:
-                booking_dict = {
-                    'id': booking.booking_id,
-                    'student_id': booking.student_id.user_id,  
-                    'lease_length': booking.lease_length,
-                    'dorm_name': booking.dorm_name,
-                    'room_number': booking.room_number,
-                    'confirmed': booking.confirmed
-                }
-                bookings_data.append(booking_dict)
-
-            for room in occupied_rooms:
-                room_dict = {
-                    'id': room.room_id,
-                    'dorm_name': room.dorm.name,
-                    'room_number': room.room_number,
-                    'capacity': room.capacity,
-                    'current_occupants': room.current_occupants
-                }
-                occupied_room_data.append(room_dict)
-
-            return JsonResponse({'bookings': bookings_data, 'maintenance_requests': maintenance_data, 'occupied_rooms': occupied_room_data})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
-    else:
+    if request.method != 'GET':
         return JsonResponse({'error': 'Invalid request method'}, status=405)
+    try:
+        # bookings
+        bookings_data = []
+        for b in studentBooking.objects.all():
+            bookings_data.append({
+                'id': b.booking_id,
+                'student_id': b.student_id.user_id,
+                'booking_date': b.booking_date.isoformat(),
+                'lease_length': b.lease_length,
+                'dorm_name': b.dorm_name,
+                'room_number': b.room_number,
+                'confirmed': b.confirmed,
+            })
+
+        # maintenance
+        maintenance_data = []
+        for m in MaintenanceRequest.objects.all():
+            maintenance_data.append({
+                'id': m.request_id,
+                'student_id': m.student_id,
+                'issue': m.issue,
+                'location': m.location,
+                'priority': m.priority,
+                'date_created': m.date_created,
+            })
+
+        # occupied rooms
+        occupied_data = []
+        for r in Room.objects.filter(is_available=False):
+            occupied_data.append({
+                'room_id': r.room_id,
+                'dorm_name': r.dorm.name,
+                'room_number': r.room_number,
+                'capacity': r.capacity,
+                'current_occupants': r.current_occupants,
+            })
+
+        return JsonResponse({
+            'bookings': bookings_data,
+            'maintenance_requests': maintenance_data,
+            'occupied_rooms': occupied_data
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
 
 
+@csrf_exempt
+@require_POST
+def update_booking(request):
+    """
+    Payload: { booking_id: number, status: 'Pending'|'Confirmed'|'Denied' }
+    """
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        bid = data.get('booking_id')
+        status = data.get('status')
+        if bid is None or status not in ('Pending','Confirmed','Denied'):
+            return JsonResponse({'status':'error','message':'Invalid parameters'}, status=400)
+
+        bk = studentBooking.objects.get(booking_id=bid)
+
+        # tri-state
+        if status == 'Confirmed':
+            bk.confirmed = True
+            sendEmail(bk.student_id.email, "Your booking has been confirmed.")
+        elif status == 'Denied':
+            bk.confirmed = False
+            sendEmail(bk.student_id.email, "Your booking has been denied.")
+        else:
+            bk.confirmed = None
+
+        bk.save()
+        return JsonResponse({'status':'success','message':'Booking updated.'})
+
+    except studentBooking.DoesNotExist:
+        return JsonResponse({'status':'error','message':'Booking not found'}, status=404)
+
+    except Exception as e:
+        # <— print the full traceback or repr so you see exactly what went wrong
+        import traceback; traceback.print_exc()
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Unexpected error: {e!r}'
+        }, status=500)
 
 
 @csrf_exempt

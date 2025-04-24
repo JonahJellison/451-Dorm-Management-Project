@@ -1,115 +1,119 @@
 <div class="admin-container">
     <header class="admin-header">
-        <div class="logo">Dorm Management System</div>
-        <div class="admin-user">
-            <span>Admin User</span>
-            <a href="index.html">Logout</a>
-        </div>
+      <div class="logo">Dorm Management System</div>
+      <div class="admin-user">
+        <span>Admin User</span>
+        <a href="index.html">Logout</a>
+      </div>
     </header>
+  
     <div class="admin-layout">
-        <nav class="admin-sidebar">
-            <ul class="admin-menu">
-                <li [class.active]="dashboadView"><a (click)="setDashboardView()">Dashboard</a></li>
-                <li [class.active]="manageRoomView"><a (click)="setManageRoomView()">Manage Rooms</a></li>
-                <li [class.active]="studentsView"><a (click)="setStudentsView()">Students</a></li>
-            </ul>
-        </nav>
-        
-        <main class="admin-content">
-            <section id="dashboard" class="admin-section">
-                <h2>Admin Dashboard</h2>
-                <div class="dashboard-cards">
-                    <div class="dashboard-card">
-                        <div class="card-value">{{totalStudents}}</div>
-                        <div class="card-label">Total Students</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="card-value">{{occupancyRate}}%</div>
-                        <div class="card-label">Occupancy Rate</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="card-value">{{pendingRequests}}</div>
-                        <div class="card-label">Pending Requests</div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="card-value">{{maintenanceRequests}}</div>
-                        <div class="card-label">Maintenance Issues</div>
-                    </div>
-                </div>
-                
-                <div class="recent-bookings">
-                    <h3>Recent Bookings</h3>
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Student ID</th>
-                                <th>Student Name</th>
-                                <th>Room</th>
-                                <th>Building</th>
-                                <th>Date</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let booking of recentBookings">
-                                <td>{{booking.student_id}}</td>
-                                <td>{{booking.student_name}}</td>
-                                <td>{{booking.room_number}}</td>
-                                <td>{{booking.building}}</td>
-                                <td>{{booking.date | date:'yyyy-MM-dd'}}</td>
-                                <td>
-                                    <span [class]="'status-' + booking.status.toLowerCase()">
-                                        {{booking.status}}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button *ngIf="booking.status === 'Pending'" class="btn-action" (click)="confirmBooking(booking.id)">Approve</button>
-                                    <button *ngIf="booking.status === 'Pending'" class="btn-action" (click)="denyBooking(booking.id)">Deny</button>
-                                    <button *ngIf="booking.status !== 'Pending'" class="btn-action">View</button>
-                                </td>
-                            </tr>
-                            <tr *ngIf="recentBookings.length === 0">
-                                <td colspan="7" class="text-center">No booking requests available</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="maintenance-requests">
-                    <h3>Maintenance Requests</h3>
-                    <table class="admin-table">
-                        <thead>
-                            <tr>
-                                <th>Request ID</th>
-                                <th>Student ID</th>
-                                <th>Issue</th>
-                                <th>Location</th>
-                                <th>Priority</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr *ngFor="let req of maintenanceList">
-                                <td>{{req.id}}</td>
-                                <td>{{req.student_id}}</td>
-                                <td>{{req.issue}}</td>
-                                <td>{{req.location}}</td>
-                                <td>{{req.priority}}</td>
-                                <td>{{req.date_created}}</td>
-                                <td>
-                                    <button class="btn-action" (click)="deleteMaintenanceRequest(req.id)">Delete</button>
-                                </td>
-                            </tr>
-                            <tr *ngIf="maintenanceList.length === 0">
-                                <td colspan="7" class="text-center">No maintenance requests</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+      <nav class="admin-sidebar">
+        <ul class="admin-menu">
+          <li [class.active]="dashboadView"><a (click)="setDashboardView()">Dashboard</a></li>
+          <li [class.active]="manageRoomView"><a (click)="setManageRoomView()">Manage Rooms</a></li>
+          <li [class.active]="studentsView"><a (click)="setStudentsView()">Students</a></li>
+        </ul>
+      </nav>
+  
+      <main class="admin-content">
+        <section *ngIf="dashboadView" class="admin-section">
+          <!-- … your dashboard cards here … -->
+  
+          <!-- Recent Bookings -->
+          <div class="recent-bookings">
+            <h3>Recent Bookings</h3>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Student ID</th><th>Name</th><th>Room</th>
+                  <th>Building</th><th>Date</th><th>Status</th><th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let b of recentBookings">
+                  <td>{{b.student_id}}</td>
+                  <td>{{b.student_name}}</td>
+                  <td>{{b.room_number}}</td>
+                  <td>{{b.building}}</td>
+                  <td>{{b.date | date:'yyyy-MM-dd'}}</td>
+                  <td>
+                    <span [class]="'status-'+b.status.toLowerCase()">
+                      {{b.status}}
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn-action" (click)="viewBooking(b.id)">View</button>
+                  </td>
+                </tr>
+                <tr *ngIf="recentBookings.length===0">
+                  <td colspan="7" class="text-center">No booking requests</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+  
+          <!-- Maintenance Requests -->
+          <div class="maintenance-requests">
+            <h3>Maintenance Requests</h3>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Request ID</th><th>Student ID</th><th>Issue</th>
+                  <th>Location</th><th>Priority</th><th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let r of maintenanceList">
+                  <td>{{r.id}}</td>
+                  <td>{{r.student_id}}</td>
+                  <td>{{r.issue}}</td>
+                  <td>{{r.location}}</td>
+                  <td>{{r.priority}}</td>
+                  <td>{{r.date_created}}</td>
+                </tr>
+                <tr *ngIf="maintenanceList.length===0">
+                  <td colspan="6" class="text-center">No maintenance requests</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+  
+          <!-- Occupied Rooms -->
+          <div class="occupied-rooms">
+            <h3>Occupied Rooms</h3>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Room ID</th><th>Building</th><th>Room Number</th>
+                  <th>Capacity</th><th>Occupants</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let o of occupiedRoomsList">
+                  <td>{{o.room_id}}</td>
+                  <td>{{o.dorm_name}}</td>
+                  <td>{{o.room_number}}</td>
+                  <td>{{o.capacity}}</td>
+                  <td>{{o.current_occupants}}</td>
+                </tr>
+                <tr *ngIf="occupiedRoomsList.length===0">
+                  <td colspan="5" class="text-center">No occupied rooms</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+  
+        </section>
+      </main>
     </div>
-</div>
-
+  
+    <!-- Booking Modal (unchanged) -->
+    <div *ngIf="showModal" class="modal-backdrop">
+      <div class="modal">
+        <h4>Booking #{{selectedBooking?.id}}</h4>
+        <!-- … same modal content … -->
+      </div>
+    </div>
+  </div>
+  

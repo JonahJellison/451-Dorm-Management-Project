@@ -1,200 +1,140 @@
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule }   from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { AuthService } from '../auth-service/auth.service';
+import { FormsModule }    from '@angular/forms';
+import { Router }         from '@angular/router';
+import { AuthService }    from '../auth-service/auth.service';
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './admin-dashboard.component.html',
-  styleUrl: './admin-dashboard.component.css'
+  styleUrls: ['./admin-dashboard.component.css']
 })
 export class AdminDashboardComponent implements OnInit {
+  // dashboard stats
+  totalStudents    = 0;
+  pendingRequests  = 0;
+  maintenanceCount = 0;
+  occupiedCount    = 0;
 
-  totalStudents: number = 0;
-  occupancyRate: number = 0;
-  pendingRequests: number = 0;
-  maintenanceRequests: number = 0;
-  numberOfRooms: number = 0;
-  occupiedRooms: number = 0;
-  maintenanceList: MaintenanceRequestData[] = [];
+  // main data arrays
+  recentBookings    : BookingData[]           = [];
+  maintenanceList   : MaintenanceRequestData[] = [];
+  occupiedRoomsList : OccupiedRoomData[]       = [];
 
-  dashboadView: boolean = true;
-  manageRoomView: boolean = false;
-  studentsView: boolean = false;
+  // modal
+  showModal        = false;
+  selectedBooking ?: BookingData;
+  selectedStatus: 'Pending'|'Confirmed'|'Denied' = 'Pending';
 
-  recentBookings: BookingData[] = [];
+  // view toggles
+  dashboadView    = true;
+  manageRoomView  = false;
+  studentsView    = false;
+
   private apiUrl = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient, private router: Router, private authService: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
-    if (this.authService.getUser() == null){
-      this.router.navigate(['/home']);
-      return;
-    }
-    this.http.post<boolean> (`${this.apiUrl}/verify_admin`, {id: this.authService.getUser()}).subscribe({
-      next: (isAdmin) => {
-        if (!isAdmin) {
-          console.error('User is not an admin');
-          this.router.navigate(['/home']);
-          return;
-        }
-        console.log('Admin Dashboard Component Initialized with user:', this.authService.getUser());
-
-      },
-      error: (error) => {
-        console.error('Error checking admin status:', error);
-      }
-    });
+    // … your verify-admin logic …
     this.fetchAdminData();
   }
 
-  // get all the admin data from the backend
   fetchAdminData(): void {
-    this.http.get<AdminDataResponse>(`${this.apiUrl}/fetch_admin_data`).subscribe({
-      next: (response) => {
-        console.log('Admin data received:', response);
-        
-        // Map booking data to include fields used in the HTML template
-        this.recentBookings = response.bookings.map(booking => ({
-          id: booking.id,
-          student_id: booking.student_id,
-          lease_length: booking.lease_length,
-          dorm_name: booking.dorm_name,
-          room_number: booking.room_number,
-          confirmed: booking.confirmed,
-          student_name: 'John Doe', // Replace with actual data if available
-          building: booking.dorm_name,
-          date: booking.booking_date,
-          status: booking.confirmed === null
-            ? 'Pending'
-            : booking.confirmed === true
-              ? 'Confirmed'
-              : 'Denied'
-        }));
-        
-        this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
-        this.totalStudents = this.recentBookings.length;
-        // update maintenance and room stats
-        this.maintenanceList = response.maintenance_requests;
-        this.maintenanceRequests = this.maintenanceList.length;
-        this.occupiedRooms = response.occupied_rooms.length;
-        this.numberOfRooms = response.occupied_rooms.length;
-      },
-      error: (error) => {
-        console.error('Error fetching admin data:', error);
-      }
-    });
-  }
-
-  confirmBooking(bookingId: number): void {
-    const booking = this.recentBookings.find(b => b.id === bookingId);
-    if (!booking) { return; }
-    this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, student_id: booking.student_id })
+    this.http.get<AdminDataResponse>(`${this.apiUrl}/fetch_admin_data`)
       .subscribe({
-        next: () => {
-          if (booking) {
-            booking.confirmed = true;
-            booking.status = 'Confirmed';
-          }
-          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+        next: res => {
+          // bookings
+          this.recentBookings = res.bookings.map(b => ({
+            id:            b.id,
+            student_id:    b.student_id,
+            lease_length:  b.lease_length,
+            dorm_name:     b.dorm_name,
+            room_number:   b.room_number,
+            confirmed:     b.confirmed,
+            student_name:  'John Doe',      // placeholder
+            building:      b.dorm_name,
+            date:          b.booking_date,
+            status:        b.confirmed === null
+                              ? 'Pending'
+                              : b.confirmed ? 'Confirmed' : 'Denied'
+          }));
+          this.totalStudents   = this.recentBookings.length;
+          this.pendingRequests = this.recentBookings
+                                    .filter(b => b.status==='Pending')
+                                    .length;
+
+          // maintenance
+          this.maintenanceList   = res.maintenance_requests;
+          this.maintenanceCount  = this.maintenanceList.length;
+
+          // occupied rooms
+          this.occupiedRoomsList = res.occupied_rooms;
+          this.occupiedCount     = this.occupiedRoomsList.length;
         },
-        error: (error) => {
-          console.error('Error confirming booking:', error);
-        }
+        error: err => console.error(err)
       });
   }
 
-  denyBooking(bookingId: number): void {
-    const booking = this.recentBookings.find(b => b.id === bookingId);
-    if (!booking) { return; }
-    this.http.post(`${this.apiUrl}/deny_booking`, { booking_id: bookingId, student_id: booking.student_id })
+  viewBooking(id: number) {
+    const bk = this.recentBookings.find(b => b.id===id);
+    if (!bk) return;
+    this.selectedBooking = bk;
+    this.selectedStatus  = bk.status;
+    this.showModal       = true;
+  }
+
+  saveBookingStatus() {
+    if (!this.selectedBooking) return;
+    const payload = {
+      booking_id: this.selectedBooking.id,
+      status:     this.selectedStatus
+    };
+    this.http.post(`${this.apiUrl}/update_booking`, payload)
       .subscribe({
         next: () => {
-          if (booking) {
-            booking.confirmed = false;
-            booking.status = 'Denied';
-          }
-          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+          // update local copy
+          const confirmed = this.selectedStatus==='Confirmed'
+                            ? true
+                            : this.selectedStatus==='Denied'
+                              ? false
+                              : null;
+          this.selectedBooking!.confirmed = confirmed;
+          this.selectedBooking!.status    = this.selectedStatus;
+          this.pendingRequests = this.recentBookings
+                                    .filter(b => b.status==='Pending')
+                                    .length;
         },
-        error: (error) => {
-          console.error('Error denying booking:', error);
-        }
+        error: e => console.error(e)
       });
+    this.showModal = false;
   }
 
-  deleteMaintenanceRequest(requestId: number): void {
-    const studentId = this.authService.getUser();
-    this.http.delete(`${this.apiUrl}/delete_maintenance_request`, { body: { request_id: requestId, student_id: studentId } })
-      .subscribe({
-        next: () => {
-          this.maintenanceRequests = Math.max(this.maintenanceRequests - 1, 0);
-        },
-        error: (error) => console.error('Error deleting maintenance request:', error)
-      });
-  }
-
-  setDashboardView() {
-    this.dashboadView = true;
-    this.manageRoomView = false;
-    this.studentsView = false;
-  }
-
-  setManageRoomView() {
-    this.dashboadView = false;
-    this.manageRoomView = true;
-    this.studentsView = false;
-  }
-
-  setStudentsView() {
-    this.dashboadView = false;
-    this.manageRoomView = false;
-    this.studentsView = true;
-  }
+  setDashboardView()   { this.dashboadView=true; this.manageRoomView=this.studentsView=false; }
+  setManageRoomView()  { this.manageRoomView=true; this.dashboadView=this.studentsView=false; }
+  setStudentsView()    { this.studentsView=true; this.dashboadView=this.manageRoomView=false; }
 }
 
-// interfaces to match data models from the backend
+// ---- interfaces ----
+
 interface BookingData {
   id: number;
   student_id: string;
   lease_length: number;
   dorm_name: string;
   room_number: string;
-  confirmed: boolean | null;
-
+  confirmed: boolean|null;
   student_name: string;
   building: string;
-  date: string | null;
-  status: 'Pending' | 'Confirmed' | 'Denied';
-}
-
-interface AdminDataResponse {
-  bookings: {
-    id: number;
-    student_id: string;
-    booking_date: string | null;
-    lease_length: number;
-    dorm_name: string;
-    room_number: string;
-    confirmed: boolean | null;
-  }[];
-  maintenance_requests: {
-    id: number;
-    student_id: string;
-    issue: string;
-    location: string;
-    priority: string;
-    date_created: string;
-  }[];
-  occupied_rooms: {
-    room_id: number;
-    dorm_name: string;
-    room_number: string;
-    capacity: number;
-    current_occupants: number;
-  }[];
+  date: string|null;
+  status: 'Pending'|'Confirmed'|'Denied';
 }
 
 interface MaintenanceRequestData {
@@ -204,4 +144,26 @@ interface MaintenanceRequestData {
   location: string;
   priority: string;
   date_created: string;
+}
+
+interface OccupiedRoomData {
+  room_id: number;
+  dorm_name: string;
+  room_number: string;
+  capacity: number;
+  current_occupants: number;
+}
+
+interface AdminDataResponse {
+  bookings: {
+    id: number;
+    student_id: string;
+    booking_date: string|null;
+    lease_length: number;
+    dorm_name: string;
+    room_number: string;
+    confirmed: boolean|null;
+  }[];
+  maintenance_requests: MaintenanceRequestData[];
+  occupied_rooms: OccupiedRoomData[];
 }

@@ -13,6 +13,7 @@ urlpatterns = [
     path('update_student_info',views.update_user_info,name='update_student_info'),
     path('maintenance_request', views.maintenance_request, name='maintenance_request'),
     path('confirm_booking', views.confirm_booking, name='confirm_booking'),
+    path('update_booking',    views.update_booking,    name='update_booking'),
     path('deny_booking', views.deny_booking, name='deny_booking'),
     path('verify_admin', views.verify_admin, name='verify_admin'),
     path('add_admin', views.add_admin, name='add_admin'),
