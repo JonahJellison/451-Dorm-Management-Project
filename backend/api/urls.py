@@ -14,4 +14,7 @@ urlpatterns = [
     path('maintenance_request', views.maintenance_request, name='maintenance_request'),
     path('confirm_booking', views.confirm_booking, name='confirm_booking'),
     path('deny_booking', views.deny_booking, name='deny_booking'),
+    path('verify_admin', views.verify_admin, name='verify_admin'),
+    path('add_admin', views.add_admin, name='add_admin'),
+    path('delete_maintenance_request', views.delete_maintenance_request, name='delete_maintenance_request'),
 ]

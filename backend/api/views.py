@@ -101,7 +101,7 @@ def fetch_admin_data(request):
             for request in maintenance_requests:
                 request_dict = {
                     'id': request.request_id,
-                    'student_id': request.student_id,
+                    'student_id': request.student_id,  # Changed from request.student_id.student_id
                     'issue': request.issue,
                     'location': request.location,
                     'priority': request.priority,
@@ -111,7 +111,7 @@ def fetch_admin_data(request):
             for booking in bookings:
                 booking_dict = {
                     'id': booking.booking_id,
-                    'student_id': booking.student_id,
+                    'student_id': booking.student_id.user_id,  # Access user_id from the UserAuth object
                     'lease_length': booking.lease_length,
                     'dorm_name': booking.dorm_name,
                     'room_number': booking.room_number,
@@ -500,7 +500,207 @@ def maintenance_request(request):
 
 @csrf_exempt
 def confirm_booking(request):
-    pass
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            booking_id = data.get('booking_id')
+            student_id = data.get('student_id')
+            student = Student.objects.get(student_id=student_id)
+            student_email = student.email
 
+            if not booking_id:
+                return JsonResponse({'status': 'error', 'message': 'Missing booking ID'}, status=400)
+                
+            try:
+                booking = studentBooking.objects.get(booking_id=booking_id)
+                
+                # Update room availability
+                try:
+                    room = Room.objects.get(dorm__name=booking.dorm_name, room_number=booking.room_number)
+                    room.current_occupants -= 1
+                    if room.current_occupants < room.capacity:
+                        room.is_available = True
+                    room.save()
+                except Room.DoesNotExist:
+                    # Continue with deletion even if room not found
+                    pass
+                
+                # Delete the booking
+                booking.delete()
+                sendEmail(student_email, "Your booking has been confirmed. Congraduations")
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Booking denied and deleted successfully'
+                })
+                
+            except studentBooking.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Booking not found'
+                }, status=404)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error denying booking: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed. Use POST method.'
+        }, status=405)
+
+@csrf_exempt
 def deny_booking(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            booking_id = data.get('booking_id')
+            student_id = data.get('student_id')
+            student = Student.objects.get(student_id=student_id)
+            student_email = student.email
+
+            if not booking_id:
+                return JsonResponse({'status': 'error', 'message': 'Missing booking ID'}, status=400)
+                
+            try:
+                booking = studentBooking.objects.get(booking_id=booking_id)
+                
+                # Update room availability
+                try:
+                    room = Room.objects.get(dorm__name=booking.dorm_name, room_number=booking.room_number)
+                    room.current_occupants -= 1
+                    if room.current_occupants < 0:
+                        room.current_occupants = 0
+                    if room.current_occupants < room.capacity:
+                        room.is_available = True
+                    room.save()
+                    sendEmail(student_email, "Unfortunately, your booking has been denied. Contact your housing coordinator for more information")
+                except Room.DoesNotExist:
+                    # Continue with deletion even if room not found
+                    pass
+                
+                # Delete the booking
+                booking.delete()
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Booking denied and deleted successfully'
+                })
+                
+            except studentBooking.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Booking not found'
+                }, status=404)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error denying booking: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed. Use POST method.'
+        }, status=405)
+
+
+@csrf_exempt
+def verify_admin(request):
+    if request.method == 'POST':
+        data = json.loads(request.body.decode('utf-8'))
+        print(f"DEBug: {data}")
+        userid = data.get('id')
+        user = UserAuth.objects.get(user_id=userid)
+        if user.is_admin:
+            return JsonResponse({'status': True, 'message': 'User is an admin.'})
+        else:
+            return JsonResponse({'status': False, 'message': 'User is not an admin.'})
+
+
+@csrf_exempt
+def add_admin(request):
+    if request.method == 'PUT':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            user_id = data.get('id')
+            if not user_id:
+                return JsonResponse({'status': 'error', 'message': 'Missing user_id in request.'}, status=400)
+            
+            # Retrieve the user from the database
+            try:
+                user = UserAuth.objects.get(user_id=user_id)
+                user.is_admin = True  # Set the is_admin field to True
+                user.save()  # Save the changes to the database
+                return JsonResponse({'status': 'success', 'message': 'User added as admin successfully.'})
+            except UserAuth.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'User not found.'}, status=404)
+        
+        except json.JSONDecodeError:
+            return JsonResponse({'status': 'error', 'message': 'Invalid JSON data.'}, status=400)
+        
+
+@csrf_exempt
+def delete_maintenance_request(request):
+    if request.method == 'DELETE':
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+            request_id = data.get('request_id')
+            student_id = data.get('student_id')
+            student = Student.objects.get(student_id=student_id)
+            student_email = student.email
+
+            if not request_id:
+                return JsonResponse({'status': 'error', 'message': 'Missing booking ID'}, status=400)
+                
+            try:
+                maintenance_request = MaintenanceRequest.objects.get(request_id=request_id)
+                
+                # Delete the booking
+                maintenance_request.delete()
+                sendEmail(student_email, "Your maintainence request has been reviewed by an administrator")
+
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'Booking deleted successfully'
+                })
+                
+            except MaintenanceRequest.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'Booking not found'
+                }, status=404)
+                
+        except json.JSONDecodeError:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid JSON data'
+            }, status=400)
+            
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error deleting booking: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Method not allowed. Use DELETE method.'
+        }, status=405)
+            
+
+def sendEmail(address, message):
+    #TODO: jonah impliment
     pass

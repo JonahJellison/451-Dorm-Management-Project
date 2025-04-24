@@ -32,7 +32,7 @@
                         <div class="card-label">Pending Requests</div>
                     </div>
                     <div class="dashboard-card">
-                        <div class="card-value">{{matinanceRequests}}</div>
+                        <div class="card-value">{{maintenanceRequests}}</div>
                         <div class="card-label">Maintenance Issues</div>
                     </div>
                 </div>
@@ -71,6 +71,39 @@
                             </tr>
                             <tr *ngIf="recentBookings.length === 0">
                                 <td colspan="7" class="text-center">No booking requests available</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="maintenance-requests">
+                    <h3>Maintenance Requests</h3>
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Request ID</th>
+                                <th>Student ID</th>
+                                <th>Issue</th>
+                                <th>Location</th>
+                                <th>Priority</th>
+                                <th>Date</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr *ngFor="let req of maintenanceList">
+                                <td>{{req.id}}</td>
+                                <td>{{req.student_id}}</td>
+                                <td>{{req.issue}}</td>
+                                <td>{{req.location}}</td>
+                                <td>{{req.priority}}</td>
+                                <td>{{req.date_created}}</td>
+                                <td>
+                                    <button class="btn-action" (click)="deleteMaintenanceRequest(req.id)">Delete</button>
+                                </td>
+                            </tr>
+                            <tr *ngIf="maintenanceList.length === 0">
+                                <td colspan="7" class="text-center">No maintenance requests</td>
                             </tr>
                         </tbody>
                     </table>

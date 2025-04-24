@@ -10,7 +10,7 @@ export class AuthService {
 
   setUser(user: any) {
     this.currentUser = user;
-    localStorage.setItem('user', JSON.stringify(user)); s
+    localStorage.setItem('user', JSON.stringify(user)); 
   }
 
   getUser() {

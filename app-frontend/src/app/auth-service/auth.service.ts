@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 @Injectable({
   providedIn: 'root',
@@ -6,18 +7,21 @@ import { Injectable } from '@angular/core';
 export class AuthService {
   private currentUser: any = null; // Store user data
 
-  constructor() {}
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    // Initialize user data if in browser environment
+    if (isPlatformBrowser(this.platformId)) {
+      this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    }
+  }
 
   setUser(user: any) {
     this.currentUser = user;
-    localStorage.setItem('user', JSON.stringify(user)); // Persist user data if needed
-    
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.setItem('user', JSON.stringify(user));
+    }
   }
 
   getUser() {
-    if (!this.currentUser) {
-      this.currentUser = JSON.parse(localStorage.getItem('user') || 'null');
-    }
     return this.currentUser;
   }
 
@@ -27,6 +31,8 @@ export class AuthService {
 
   logout() {
     this.currentUser = null;
-    localStorage.removeItem('user');
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem('user');
+    }
   }
 }
