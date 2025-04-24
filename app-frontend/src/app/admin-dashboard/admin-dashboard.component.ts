@@ -18,6 +18,7 @@ export class AdminDashboardComponent implements OnInit {
   pendingRequests  = 0;
   maintenanceCount = 0;
   occupiedCount    = 0;
+  pendingMaint     = 0; 
 
   // main data arrays
   recentBookings    : BookingData[]           = [];
@@ -117,6 +118,21 @@ export class AdminDashboardComponent implements OnInit {
     this.showModal = false;
   }
 
+  updateMaintenance(req: MaintenanceRequestData, newState: 'Approved'|'Denied') {
+    this.http.post(`${this.apiUrl}/update_maintenance`, {
+      request_id: req.id,
+      status:     newState
+    }).subscribe({
+      next: () => {
+        // reflect change in the UI
+        req.status = (newState === 'Approved') ? true : false;
+        // recalc pending count if you display it elsewhere
+        this.pendingMaint = this.maintenanceList.filter(m => m.status === null).length;
+      },
+      error: err => console.error('Maintenance update failed', err)
+    });
+  }
+
   setDashboardView()   { this.dashboadView=true; this.manageRoomView=this.studentsView=false; }
   setManageRoomView()  { this.manageRoomView=true; this.dashboadView=this.studentsView=false; }
   setStudentsView()    { this.studentsView=true; this.dashboadView=this.manageRoomView=false; }
@@ -144,6 +160,8 @@ interface MaintenanceRequestData {
   location: string;
   priority: string;
   date_created: string;
+  status: boolean | null;
+  statusLabel?: 'Pending' | 'Approved' | 'Denied';
 }
 
 interface OccupiedRoomData {

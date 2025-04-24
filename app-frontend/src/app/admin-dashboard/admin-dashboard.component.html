@@ -53,31 +53,59 @@
             </table>
           </div>
   
-          <!-- Maintenance Requests -->
-          <div class="maintenance-requests">
-            <h3>Maintenance Requests</h3>
-            <table class="admin-table">
-              <thead>
-                <tr>
-                  <th>Request ID</th><th>Student ID</th><th>Issue</th>
-                  <th>Location</th><th>Priority</th><th>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let r of maintenanceList">
-                  <td>{{r.id}}</td>
-                  <td>{{r.student_id}}</td>
-                  <td>{{r.issue}}</td>
-                  <td>{{r.location}}</td>
-                  <td>{{r.priority}}</td>
-                  <td>{{r.date_created}}</td>
-                </tr>
-                <tr *ngIf="maintenanceList.length===0">
-                  <td colspan="6" class="text-center">No maintenance requests</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
+        <!-- Maintenance Requests -->
+        <div class="maintenance-requests">
+           <h3>Maintenance Requests</h3>
+           <table class="admin-table">
+             <thead>
+               <tr>
+                 <th>Request ID</th>
+                 <th>Student ID</th>
+                 <th>Issue</th>
+                 <th>Location</th>
+                 <th>Priority</th>
+                 <th>Date</th>
+                 <th>Status</th>
+                 <th>Actions</th>
+               </tr>
+             </thead>
+             <tbody>
+               <tr *ngFor="let r of maintenanceList">
+                 <td>{{r.id}}</td>
+                 <td>{{r.student_id}}</td>
+                 <td>{{r.issue}}</td>
+                 <td>{{r.location}}</td>
+                 <td>{{r.priority}}</td>
+                 <td>{{r.date_created}}</td>
+                 <!-- tri-state status display -->
+                 <td>
+                   <span [class]="'status-' + (
+                       r.status===null ? 'pending' :
+                       r.status ? 'approved' : 'denied'
+                     )">
+                     {{ r.status===null ? 'Pending' : (r.status ? 'Approved' : 'Denied') }}
+                   </span>
+                 </td>
+                 <!-- only show buttons when Pending -->
+                 <td>
+                   <button *ngIf="r.status === null"
+                           class="btn-action"
+                           (click)="updateMaintenance(r, 'Approved')">
+                     Approve
+                   </button>
+                   <button *ngIf="r.status === null"
+                           class="btn-action"
+                           (click)="updateMaintenance(r, 'Denied')">
+                     Deny
+                   </button>
+                 </td>
+               </tr>
+               <tr *ngIf="maintenanceList.length === 0">
+                 <td colspan="8" class="text-center">No maintenance requests</td>
+               </tr>
+             </tbody>
+           </table>
+         </div>
   
           <!-- Occupied Rooms -->
           <div class="occupied-rooms">
