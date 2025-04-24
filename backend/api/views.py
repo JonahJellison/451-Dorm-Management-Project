@@ -87,50 +87,6 @@ def login_user(request):
         return HttpResponseBadRequest("Invalid password.")
     
 
-@csrf_exempt
-def fetch_admin_data(request):
-    if request.method == 'GET':
-    # Fetch all admin data and return as JSON response
-        try:
-            bookings = studentBooking.objects.all()
-            bookings_data = []
-            maintenance_data = []
-            maintenance_requests = MaintenanceRequest.objects.all()
-            occupied_rooms = Room.objects.filter(is_available=False)
-            room_data = []
-            for request in maintenance_requests:
-                request_dict = {
-                    'id': request.request_id,
-                    'student_id': request.student_id,  # Changed from request.student_id.student_id
-                    'issue': request.issue,
-                    'location': request.location,
-                    'priority': request.priority,
-                    'date_created': request.date_created
-                }
-                maintenance_data.append(request_dict)
-            for booking in bookings:
-                booking_dict = {
-                    'id': booking.booking_id,
-                    'student_id': booking.student_id.user_id,  # Access user_id from the UserAuth object
-                    'lease_length': booking.lease_length,
-                    'dorm_name': booking.dorm_name,
-                    'room_number': booking.room_number,
-                    'confirmed': booking.confirmed
-                }
-                bookings_data.append(booking_dict)
-            for room in occupied_rooms:
-                room_dict = {
-                    'room_id': room.room_id,
-                    'dorm_name': room.dorm.name,
-                    'room_number': room.room_number,
-                    'capacity': room.capacity,
-                    'current_occupants': room.current_occupants
-                }
-                room_data.append(room_dict)
-
-            return JsonResponse({'bookings': bookings_data, 'maintenance_requests': maintenance_data, 'occupied_rooms': room_data})
-        except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
 
 @csrf_exempt
 def fetch_dormroom_data(request):
@@ -498,12 +454,71 @@ def maintenance_request(request):
         }, status=405)
 
 
+
+@csrf_exempt
+def fetch_admin_data(request):
+    if request.method == 'GET':
+    # Fetch all admin data and return as JSON response
+        try:
+            bookings = studentBooking.objects.all()
+            bookings_data = []
+
+            maintenance_requests = MaintenanceRequest.objects.all()
+            maintenance_data = []
+
+            occupied_rooms = Room.objects.filter(is_available=False)
+            occupied_room_data = []
+
+            for request in maintenance_requests:
+                request_dict = {
+                    'id': request.request_id,
+                    'student_id': request.student_id,  
+                    'issue': request.issue,
+                    'location': request.location,
+                    'priority': request.priority,
+                    'date_created': request.date_created
+                }
+                maintenance_data.append(request_dict)
+
+            for booking in bookings:
+                booking_dict = {
+                    'id': booking.booking_id,
+                    'student_id': booking.student_id.user_id,  
+                    'lease_length': booking.lease_length,
+                    'dorm_name': booking.dorm_name,
+                    'room_number': booking.room_number,
+                    'confirmed': booking.confirmed
+                }
+                bookings_data.append(booking_dict)
+
+            for room in occupied_rooms:
+                room_dict = {
+                    'id': room.room_id,
+                    'dorm_name': room.dorm.name,
+                    'room_number': room.room_number,
+                    'capacity': room.capacity,
+                    'current_occupants': room.current_occupants
+                }
+                occupied_room_data.append(room_dict)
+
+            return JsonResponse({'bookings': bookings_data, 'maintenance_requests': maintenance_data, 'occupied_rooms': occupied_room_data})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+    else:
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+
 @csrf_exempt
 def confirm_booking(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
+            # get booking ID for confirmation
             booking_id = data.get('booking_id')
+
+            #get student id for email info
             student_id = data.get('student_id')
             student = Student.objects.get(student_id=student_id)
             student_email = student.email
@@ -517,9 +532,11 @@ def confirm_booking(request):
                 # Update room availability
                 try:
                     room = Room.objects.get(dorm__name=booking.dorm_name, room_number=booking.room_number)
-                    room.current_occupants -= 1
+                    room.current_occupants += 1
                     if room.current_occupants < room.capacity:
                         room.is_available = True
+                    else:
+                        room.is_available = False
                     room.save()
                 except Room.DoesNotExist:
                     # Continue with deletion even if room not found
@@ -556,12 +573,16 @@ def confirm_booking(request):
             'message': 'Method not allowed. Use POST method.'
         }, status=405)
 
+
 @csrf_exempt
 def deny_booking(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body.decode('utf-8'))
+            # get booking info
             booking_id = data.get('booking_id')
+
+            # get student email info
             student_id = data.get('student_id')
             student = Student.objects.get(student_id=student_id)
             student_email = student.email
