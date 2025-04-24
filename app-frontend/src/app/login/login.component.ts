@@ -1,22 +1,37 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { Router } from '@angular/router';
+import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../auth-service/auth.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [FormsModule, HttpClientModule],
+  imports: [FormsModule, HttpClientModule, RouterModule, CommonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   username: string | null = null;
   password: string | null = null;
+  errorMessage: string | null = null;
 
-  constructor(private http: HttpClient,private router: Router, private authservice: AuthService) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private authservice: AuthService,
+    private route: ActivatedRoute
+  ) {}
   
+  ngOnInit(): void {
+    // Check for error parameter in URL
+    this.route.queryParams.subscribe(params => {
+      if (params['error'] === 'invalid_token') {
+        this.errorMessage = 'Invalid or expired verification link. Please try logging in or request a new verification email.';
+      }
+    });
+  }
 
   login(): void {
     // validate
@@ -44,6 +59,12 @@ export class LoginComponent {
       },
       (error) => {
         console.error('Login error:', error);
+        if (error.error && typeof error.error === 'string' && 
+          error.error.includes("Account not activated")) {
+          this.errorMessage = "Account not activated. Please check your email for confirmation.";
+        } else {
+          this.errorMessage = 'Login failed. Please try again.';
+        }
       }
     );
   }

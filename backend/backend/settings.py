@@ -108,7 +108,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'dormemailer@gmail.com'
-EMAIL_HOST_PASSWORD = '451DormEmailer'
+EMAIL_HOST_PASSWORD = 'jxwk rdgk padg gomm'
 DEFAULT_FROM_EMAIL = 'Automated Email <dormemailer@gmail.com>'
 
 # Internationalization

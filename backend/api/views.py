@@ -7,8 +7,7 @@ from django.http import JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
-from .email_utility import send_confirmation_email
-from django.contrib.auth.tokens import default_token_generator
+from .email_utility import send_confirmation_email, send_password_reset_email, user_token_generator
 from django.utils.http import urlsafe_base64_decode
 from .models import UserAuth
 import requests
@@ -26,6 +25,11 @@ def register_user(request):
         email = data.get('email')
         if not user_id or not password:
             return HttpResponseBadRequest('ID or Password missing!')
+        # Check if the user ID already exists
+        if UserAuth.objects.filter(user_id=user_id).exists():
+            return HttpResponseBadRequest("User ID already registered to another account.")
+        if UserAuth.objects.filter(email=email).exists():
+            return HttpResponseBadRequest("Email already registered to another account.")
     except json.JSONDecodeError:
         return HttpResponseBadRequest("Something went wrong with the JSON.")
     
@@ -102,19 +106,37 @@ def login_user(request):
     
 @csrf_exempt
 def confirm_email(request, uidb64, token):
-    User = get_user_model()
+    # Check if this is an API request or direct access
+    is_api_request = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    
     try:
         uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = UserAuth.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, UserAuth.DoesNotExist):
         user = None
 
-    if user and default_token_generator.check_token(user, token):
+    if user and user_token_generator.check_token(user, token, purpose='email_confirmation'):
         user.is_active = True   # Activate the account
         user.save()
-        return JsonResponse({'status': 'success', 'message': 'Email confirmed successfully. You can log in now.'})
+        
+        if is_api_request:
+            # API response for frontend calls
+            return JsonResponse({
+                'status': 'success', 
+                'message': 'Email confirmed successfully. You can log in now.'
+            })
+        else:
+            # Direct access from email link - redirect to frontend
+            return redirect(f'http://localhost:4200/email-confirmation-success')
     else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid or expired confirmation token.'}, status=400)
+        if is_api_request:
+            return JsonResponse({
+                'status': 'error', 
+                'message': 'Invalid or expired confirmation token.'
+            }, status=400)
+        else:
+            # Redirect to login with error
+            return redirect('http://localhost:4200/login?error=invalid_token')
 
 @csrf_exempt
 def fetch_admin_data(request):
@@ -545,3 +567,129 @@ def maintenance_request(request):
             'status': 'error',
             'message': 'Method not allowed. Use POST to create a request or GET to retrieve requests.'
         }, status=405)
+
+@csrf_exempt
+@require_POST
+def request_password_reset(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        identifier = data.get('identifier')
+        identifier_type = data.get('type', 'email')  # Default to email
+        
+        if not identifier:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Email or Student ID is required'
+            }, status=400)
+        
+        # Find the user based on the provided identifier
+        if identifier_type == 'email':
+            try:
+                user = UserAuth.objects.get(email=identifier)
+            except UserAuth.DoesNotExist:
+                # For security reasons, don't reveal if the email exists or not
+                return JsonResponse({
+                    'status': 'success',
+                    'message': 'If your email is registered in our system, you will receive password reset instructions'
+                })
+        else:  # student_id
+            try:
+                user = UserAuth.objects.get(user_id=identifier)
+            except UserAuth.DoesNotExist:
+                return JsonResponse({
+                    'status': 'error',
+                    'message': 'Student ID not found'
+                }, status=404)
+        
+        # Send password reset email
+        try:
+            send_password_reset_email(request, user)
+        except Exception as e:
+            return JsonResponse({
+                'status': 'error',
+                'message': f'Error sending password reset email: {str(e)}'
+            }, status=500)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Password reset instructions have been sent to your email'
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error processing request: {str(e)}'
+        }, status=500)
+
+@csrf_exempt
+@require_POST
+def reset_password(request):
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        token = data.get('token')
+        uid = data.get('uid')
+        new_password = data.get('new_password')
+        
+        if not all([token, uid, new_password]):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Missing required fields'
+            }, status=400)
+        
+        if len(new_password) < 6:
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Password must be at least 6 characters long'
+            }, status=400)
+        
+        try:
+            uid_decoded = urlsafe_base64_decode(uid).decode()
+            user = UserAuth.objects.get(pk=uid_decoded)
+        except (TypeError, ValueError, OverflowError, UserAuth.DoesNotExist):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid reset link'
+            }, status=400)
+        
+        if not user_token_generator.check_token(user, token, purpose='password_reset'):
+            return JsonResponse({
+                'status': 'error',
+                'message': 'Invalid or expired token'
+            }, status=400)
+        
+        # Create a static salt "Salt100" and pad it to 16 bytes
+        salt = "Salt100"
+        salt_processed = salt.encode('utf-8').ljust(16, b'\0')
+        
+        # Combine the padded salt with the password
+        salted_password = salt_processed + new_password.encode('utf-8')
+        
+        # Hash the password
+        hashed_password = hashlib.sha256(salted_password).hexdigest()
+        
+        # Update the user's password
+        user.salt = salt_processed.hex()
+        user.hashed_password = hashed_password
+        user.is_active = True  # Ensure the account is active
+        user.save()
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Your password has been successfully reset'
+        })
+    
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Invalid JSON data'
+        }, status=400)
+    except Exception as e:
+        return JsonResponse({
+            'status': 'error',
+            'message': f'Error processing request: {str(e)}'
+        }, status=500)
