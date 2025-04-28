@@ -7,7 +7,7 @@ class UserAuth(models.Model):
     hashed_password = models.CharField(max_length=64) 
     email = models.CharField(max_length=255, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    is_active = models.BooleanField(default=False) # To manage active/inactive status
+    is_active = models.BooleanField(default=True) # To manage active/inactive status
 
     def __str__(self):
         return self.user_id
