@@ -17,7 +17,9 @@ If Not {
 
 3. Create virtual enviorment with all dependencies from requirements.txt
 
-4. Update settings.py to match psql user created {
+4. Run "npm install" 
+
+5. Update settings.py to match psql user created {
     
     DATABASES = {
         'default': {
