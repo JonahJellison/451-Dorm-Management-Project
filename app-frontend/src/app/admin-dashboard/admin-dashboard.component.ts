@@ -1,145 +1,183 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit }           from '@angular/core';
+import { CommonModule }                from '@angular/common';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { FormsModule }                 from '@angular/forms';
+import { Router }                      from '@angular/router';
+import { AuthService }                 from '../auth-service/auth.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, HttpClientModule],
+  imports: [CommonModule, HttpClientModule, FormsModule],
   templateUrl: './admin-dashboard.component.html',
-  styleUrl: './admin-dashboard.component.css'
+  styleUrls: ['./admin-dashboard.component.css']
 })
 export class AdminDashboardComponent implements OnInit {
+  // stats
+  totalStudents   = 0;
+  pendingRequests = 0;
+  pendingMaint    = 0;
+  occupiedCount   = 0;
 
-  totalStudents: number = 0;
-  occupancyRate: number = 0;
-  pendingRequests: number = 0;
-  matinanceRequests: number = 0;
-  numberOfRooms: number = 0;
-  occupiedRooms: number = 0;
+  // data
+  recentBookings    : BookingData[]            = [];
+  maintenanceList   : MaintenanceRequestData[] = [];
+  occupiedRoomsList : OccupiedRoomData[]       = [];
 
-  dashboadView: boolean = true;
-  manageRoomView: boolean = false;
-  studentsView: boolean = false;
+  // modal state
+  showModal       = false;
+  selectedBooking?: BookingData;
+  selectedStatus: 'Pending'|'Confirmed'|'Denied' = 'Pending';
 
-  recentBookings: BookingData[] = [];
+  // view toggles
+  dashboadView   = true;
+  manageRoomView = false;
+  studentsView   = false;
+
   private apiUrl = 'http://localhost:8000/api';
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private router: Router,
+    private authService: AuthService
+  ) {}
 
   ngOnInit(): void {
+    // your verify-admin check…
     this.fetchAdminData();
   }
 
-  // get all the admin data from the backend
   fetchAdminData(): void {
-    this.http.get<AdminDataResponse>(`${this.apiUrl}/fetch_admin_data`).subscribe({
-      next: (response) => {
-        console.log('Admin data received:', response);
-        
-        // Map booking data to include fields used in the HTML template
-        this.recentBookings = response.bookings.map(booking => ({
-          id: booking.id,
-          student_id: booking.student_id,
-          lease_length: booking.lease_length,
-          dorm_name: booking.dorm_name,
-          room_number: booking.room_number,
-          confirmed: booking.confirmed,
-          student_name: 'John Doe', // Replace with actual data if available
-          building: booking.dorm_name,
-          date: booking.booking_date,
-          status: booking.confirmed === null
-            ? 'Pending'
-            : booking.confirmed === true
-              ? 'Confirmed'
-              : 'Denied'
-        }));
-        
-        this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
-        this.totalStudents = this.recentBookings.length;
-      },
-      error: (error) => {
-        console.error('Error fetching admin data:', error);
-      }
-    });
-  }
-
-  confirmBooking(bookingId: number): void {
-    this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, confirmed: true })
+    this.http.get<AdminDataResponse>(`${this.apiUrl}/fetch_admin_data`)
       .subscribe({
-        next: () => {
-          const booking = this.recentBookings.find(b => b.id === bookingId);
-          if (booking) {
-            booking.confirmed = true;
-            booking.status = 'Confirmed';
-          }
-          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
+        next: res => {
+          // Recent Bookings
+          this.recentBookings = res.bookings.map(b => ({
+            id:           b.id,
+            student_id:   b.student_id,
+            lease_length: b.lease_length,
+            dorm_name:    b.dorm_name,
+            room_number:  b.room_number,
+            confirmed:    b.confirmed,
+            student_name: 'John Doe',       // placeholder
+            building:     b.dorm_name,
+            date:         b.booking_date,
+            status:       b.confirmed===null
+                            ? 'Pending'
+                            : b.confirmed ? 'Confirmed' : 'Denied'
+          }));
+          this.totalStudents   = this.recentBookings.length;
+          this.pendingRequests = this.recentBookings
+                                   .filter(b=>b.status==='Pending')
+                                   .length;
+
+          // Maintenance Requests
+          this.maintenanceList = res.maintenance_requests;
+          this.pendingMaint    = this.maintenanceList
+                                   .filter(m=>m.status===null)
+                                   .length;
+
+          // Occupied Rooms (confirmed bookings)
+          this.occupiedRoomsList = res.occupied_rooms;
+          this.occupiedCount     = this.occupiedRoomsList.length;
         },
-        error: (error) => {
-          console.error('Error confirming booking:', error);
-        }
+        error: err => console.error(err)
       });
   }
 
-  denyBooking(bookingId: number): void {
-    this.http.post(`${this.apiUrl}/confirm_booking`, { booking_id: bookingId, confirmed: false })
-      .subscribe({
-        next: () => {
-          const booking = this.recentBookings.find(b => b.id === bookingId);
-          if (booking) {
-            booking.confirmed = false;
-            booking.status = 'Denied';
-          }
-          this.pendingRequests = this.recentBookings.filter(b => b.status === 'Pending').length;
-        },
-        error: (error) => {
-          console.error('Error denying booking:', error);
-        }
+  // Booking modal
+  viewBooking(id: number) {
+    const bk = this.recentBookings.find(b=>b.id===id);
+    if (!bk) return;
+    this.selectedBooking = bk;
+    this.selectedStatus  = bk.status;
+    this.showModal       = true;
+  }
+
+  saveBookingStatus() {
+    if (!this.selectedBooking) return;
+    const payload = {
+      booking_id: this.selectedBooking.id,
+      status:     this.selectedStatus
+    };
+    this.http.post(`${this.apiUrl}/update_booking`, payload)
+      .subscribe(() => {
+        // update in-place
+        this.selectedBooking!.confirmed =
+          this.selectedStatus==='Confirmed'? true
+          : this.selectedStatus==='Denied'? false
+          : null;
+        this.selectedBooking!.status = this.selectedStatus;
+        this.pendingRequests = this.recentBookings
+                                 .filter(b=>b.status==='Pending')
+                                 .length;
       });
+    this.showModal = false;
   }
 
-  setDashboardView() {
-    this.dashboadView = true;
-    this.manageRoomView = false;
-    this.studentsView = false;
+  // Maintenance Approve/Deny
+  updateMaintenance(req: MaintenanceRequestData, newState: 'Approved'|'Denied') {
+    this.http.post(`${this.apiUrl}/update_maintenance`, {
+      request_id: req.id,
+      status:     newState
+    }).subscribe(() => {
+      req.status = (newState==='Approved');
+      this.pendingMaint = this.maintenanceList
+                              .filter(m=>m.status===null)
+                              .length;
+    }, err => console.error(err));
   }
 
-  setManageRoomView() {
-    this.dashboadView = false;
-    this.manageRoomView = true;
-    this.studentsView = false;
-  }
-
-  setStudentsView() {
-    this.dashboadView = false;
-    this.manageRoomView = false;
-    this.studentsView = true;
-  }
+  // View toggles
+  setDashboardView()   { this.dashboadView=true;   this.manageRoomView=this.studentsView=false; }
+  setManageRoomView()  { this.manageRoomView=true;  this.dashboadView=this.studentsView=false; }
+  setStudentsView()    { this.studentsView=true;    this.dashboadView=this.manageRoomView=false; }
 }
 
-// interfaces to match data models from the backend
+
+// ─── interfaces ─────────────────────────────────────────────────────────
+
 interface BookingData {
   id: number;
   student_id: string;
   lease_length: number;
   dorm_name: string;
   room_number: string;
-  confirmed: boolean | null;
-
+  confirmed: boolean|null;
   student_name: string;
   building: string;
-  date: string | null;
-  status: 'Pending' | 'Confirmed' | 'Denied';
+  date: string|null;
+  status: 'Pending'|'Confirmed'|'Denied';
+}
+
+interface MaintenanceRequestData {
+  id: number;
+  student_id: string;
+  issue: string;
+  location: string;
+  priority: string;
+  date_created: string;
+  status: boolean|null;  // null=Pending, true=Approved, false=Denied
+}
+
+interface OccupiedRoomData {
+  id: number;           // booking_id
+  student_id: string;
+  dorm_name: string;
+  room_number: string;
+  booking_date: string;
 }
 
 interface AdminDataResponse {
   bookings: {
     id: number;
     student_id: string;
-    booking_date: string | null;
+    booking_date: string|null;
     lease_length: number;
     dorm_name: string;
     room_number: string;
-    confirmed: boolean | null;
+    confirmed: boolean|null;
   }[];
+  maintenance_requests: MaintenanceRequestData[];
+  occupied_rooms: OccupiedRoomData[];
 }

@@ -2,7 +2,7 @@
 
 Running the app:
 
-1. ensure that postgress is installed
+1. Ensure that PostgreSQL is installed
 If Not { 
     install from "https://www.postgresql.org/download/"
     Then check "C:\Program Files\PostgreSQL\17\data\postgresql.conf" has host set to 'localhost' and port is '5432'
@@ -15,9 +15,11 @@ If Not {
     > GRANT ALL PRIVILEGES ON DATABASE mydatabase TO myuser;
 }
 
-3. Create virtual enviorment with all dependencies from requirements.txt
+3. Create a virtual environment with all dependencies from requirements.txt
 
-4. Update settings.py to match psql user created {
+4. Run "npm install" 
+
+5. Update settings.py to match psql user created {
     
     DATABASES = {
         'default': {
@@ -31,16 +33,16 @@ If Not {
     }
 }
 
-4. Apply Migrations and create superuser from terminal {
+4. Apply Migrations and create superuser from the terminal {
     451-Dorm-Managment-Project/backend> python manage.py migrate
     451-Dorm-Managment-Project/backend> python manage.py createsuperuser
 }
 
-5. Run the psql server from terminal {
+5. Run the psql server from the terminal {
     451-Dorm-Managment-Project/backend> python manage.py runserver
 }
 
-6. Populate the database with mock data from terminal {
+6. Populate the database with mock data from the terminal {
     451-Dorm-Managment-Project/backend/api> python data_generator.py
 }
 
